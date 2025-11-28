@@ -1,0 +1,28 @@
+<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Example doodle SVG with stroke paths for animation -->
+  <path
+    d="M 50 100 Q 100 50, 150 100 T 250 100 T 350 100"
+    stroke="white"
+    stroke-width="2"
+    fill="none"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M 50 120 Q 100 170, 150 120 T 250 120 T 350 120"
+    stroke="white"
+    stroke-width="2"
+    fill="none"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M 50 140 Q 100 90, 150 140 T 250 140 T 350 140"
+    stroke="white"
+    stroke-width="2"
+    fill="none"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
+

@@ -1,5 +1,38 @@
 @import "tailwindcss";
 
+/* CSS @font-face fallback - ensures fonts work even if Next.js font loading fails */
+@font-face {
+  font-family: "PP Neue Corp Normal Medium";
+  src: url("/fonts/PPNeueCorp-NormalMedium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Neue Corp Normal Ultralight";
+  src: url("/fonts/PPNeueCorp-NormalUltralight.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Neue Corp Wide Medium";
+  src: url("/fonts/PPNeueCorp-WideMedium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Neue Corp Wide Ultrabold";
+  src: url("/fonts/PPNeueCorp-WideUltrabold.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -8,8 +41,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-pp-neue-corp-normal-medium: var(--font-pp-neue-corp-normal-medium);
+  --font-pp-neue-corp-normal-ultralight: var(--font-pp-neue-corp-normal-ultralight);
+  --font-pp-neue-corp-wide-medium: var(--font-pp-neue-corp-wide-medium);
+  --font-pp-neue-corp-wide-ultrabold: var(--font-pp-neue-corp-wide-ultrabold);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,8 +54,49 @@
   }
 }
 
+/* Robust fallback font stack */
+:root {
+  --font-fallback: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Primary font with multiple fallback layers - will gracefully degrade if custom font fails to load */
+  font-family: var(--font-pp-neue-corp-normal-medium), "PP Neue Corp Normal Medium", var(--font-fallback);
+}
+
+/* Utility classes for different font variants with multiple fallback layers */
+.font-pp-normal-medium {
+  font-family: var(--font-pp-neue-corp-normal-medium), "PP Neue Corp Normal Medium", var(--font-fallback);
+  font-weight: 500;
+}
+
+.font-pp-normal-ultralight {
+  font-family: var(--font-pp-neue-corp-normal-ultralight), "PP Neue Corp Normal Ultralight", var(--font-fallback);
+  font-weight: 200;
+}
+
+.font-pp-wide-medium {
+  font-family: var(--font-pp-neue-corp-wide-medium), "PP Neue Corp Wide Medium", var(--font-fallback);
+  font-weight: 500;
+}
+
+.font-pp-wide-ultrabold {
+  font-family: var(--font-pp-neue-corp-wide-ultrabold), "PP Neue Corp Wide Ultrabold", var(--font-fallback);
+  font-weight: 800;
+}
+
+/* Infinite scroll animation for clients banner */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 30s linear infinite;
 }
