@@ -86,9 +86,11 @@ export function useParallax({
 
         // Calculate scroll amount relative to container entry
         // When scrollY equals containerOffsetTop: scrollAmount = 0
-        const scrollAmount = Math.max(0, scrollY - containerOffsetTop);
+        // Allow negative values so parallax continues smoothly when scrolling above section
+        const scrollAmount = scrollY - containerOffsetTop;
 
         // Apply transform - starts at 0 when container is at top, moves slower as you scroll
+        // Negative values will move element up, positive values move it down
         const transformY = scrollAmount * speed;
 
         gsap.set(elementRef.current, {

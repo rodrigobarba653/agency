@@ -3,83 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ppNeueCorpWideMedium } from "../fonts";
-
-// Generate an audio waveform-like doodle with tilt and varying wave ranges
-function generateBackgroundDoodle(width: number, height: number): string {
-  const segments = 60; // More segments for smoother waveform
-  const segmentWidth = width / segments;
-
-  // Tilt: start higher on left, end lower on right
-  const startY = height * 0.2;
-  const endY = height * 0.8;
-  const tilt = (endY - startY) / segments;
-
-  // Varying wave ranges (amplitudes)
-  const minAmplitude = height * 0.08;
-  const maxAmplitude = height * 0.25;
-
-  // Random seed for consistent variation
-  const seed = width * 0.789;
-  const random = (n: number) => {
-    const x = Math.sin(n * 12.9898 + seed) * 43758.5453;
-    return x - Math.floor(x);
-  };
-
-  // Calculate all points first
-  const points: Array<{ x: number; y: number }> = [];
-
-  for (let i = 0; i <= segments; i++) {
-    const x = i * segmentWidth;
-    const progress = i / segments;
-
-    // Base Y with tilt
-    const baseY = startY + tilt * i;
-
-    // Varying amplitude based on position
-    const amplitudeVariation =
-      minAmplitude + (maxAmplitude - minAmplitude) * random(i);
-
-    // Audio waveform pattern - multiple frequencies
-    const wave1 = Math.sin(progress * Math.PI * 12) * amplitudeVariation;
-    const wave2 = Math.sin(progress * Math.PI * 7) * amplitudeVariation * 0.6;
-    const wave3 = Math.sin(progress * Math.PI * 18) * amplitudeVariation * 0.4;
-
-    // Combine waves for audio waveform effect
-    const wave = wave1 + wave2 + wave3;
-
-    // Add slight randomness for organic feel
-    const randomOffset = (random(i + 100) - 0.5) * amplitudeVariation * 0.2;
-
-    const y = baseY + wave + randomOffset;
-    points.push({ x, y });
-  }
-
-  // Create smooth curve using quadratic bezier
-  let path = `M ${points[0].x},${points[0].y}`;
-
-  for (let i = 1; i < points.length; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const next = points[i + 1] || curr;
-
-    // Control point for smooth curve (midpoint between current and next)
-    const cpX = (curr.x + next.x) / 2;
-    const cpY = (curr.y + next.y) / 2;
-
-    if (i === 1) {
-      // First curve: use current point as control
-      path += ` Q ${curr.x},${curr.y} ${cpX},${cpY}`;
-    } else if (i < points.length - 1) {
-      // Middle curves: smooth transition
-      path += ` Q ${curr.x},${curr.y} ${cpX},${cpY}`;
-    } else {
-      // Last point: straight to end
-      path += ` Q ${curr.x},${curr.y} ${curr.x},${curr.y}`;
-    }
-  }
-
-  return path;
-}
+import Wave from "./Wave";
+import { useParallax } from "../hooks/useParallax";
 
 const projects = [
   {
@@ -96,42 +21,21 @@ const projects = [
     width: 600,
     height: 320,
   },
-  {
-    id: 3,
-    title: "Project 3",
-    image: "/images/project3.jpg",
-    width: 500,
-    height: 400,
-  },
-  {
-    id: 4,
-    title: "Project 4",
-    image: "/images/project4.jpg",
-    width: 700,
-    height: 360,
-  },
-  {
-    id: 5,
-    title: "Project 5",
-    image: "/images/project5.jpg",
-    width: 450,
-    height: 520,
-  },
 ];
 
 export default function Projects() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
-  const doodlePathRef = useRef<SVGPathElement>(null);
+  const waveContainerRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoScrolling, setIsAutoScrolling] = useState(true);
-  const [hasAnimated, setHasAnimated] = useState(false);
-  const [doodlePath, setDoodlePath] = useState<string>("");
 
-  // Generate doodle path only on client to avoid hydration mismatch
-  useEffect(() => {
-    setDoodlePath(generateBackgroundDoodle(1200, 800));
-  }, []);
+  // Parallax scroll effect for wave
+  useParallax({
+    elementRef: waveContainerRef,
+    containerRef: sectionRef,
+    speed: 0.5,
+  });
 
   // Auto-scroll functionality
   useEffect(() => {
@@ -166,39 +70,6 @@ export default function Projects() {
     scrollToIndex();
   }, [currentIndex]);
 
-  // Animate doodle on scroll into view
-  useEffect(() => {
-    if (!sectionRef.current || !doodlePathRef.current || hasAnimated) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasAnimated) {
-            const path = doodlePathRef.current;
-            if (!path) return;
-
-            const pathLength = path.getTotalLength();
-            path.style.strokeDasharray = `${pathLength}`;
-            path.style.strokeDashoffset = `${pathLength}`;
-
-            gsap.to(path, {
-              strokeDashoffset: 0,
-              duration: 2,
-              ease: "power2.out",
-            });
-
-            setHasAnimated(true);
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    observer.observe(sectionRef.current);
-
-    return () => observer.disconnect();
-  }, [hasAnimated]);
-
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
     setIsAutoScrolling(false);
@@ -222,27 +93,17 @@ export default function Projects() {
       ref={sectionRef}
       className="relative bg-white py-16 md:py-24 overflow-hidden"
     >
-      {/* Background Doodle */}
-      <div className="absolute inset-0 pointer-events-none">
-        <svg
-          className="w-full h-full"
-          viewBox="0 0 1200 800"
-          preserveAspectRatio="none"
-        >
-          {doodlePath && (
-            <path
-              ref={doodlePathRef}
-              d={doodlePath}
-              stroke="black"
-              strokeWidth="3.5"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          )}
-        </svg>
+      {/* Background Wave */}
+      <div
+        ref={waveContainerRef}
+        className="absolute inset-0 pointer-events-none overflow-hidden w-full"
+      >
+        <Wave
+          className="w-full h-full opacity-100"
+          animateOnScroll={true}
+          sectionRef={sectionRef}
+        />
       </div>
-
       <div className="container mx-auto px-6 relative z-10">
         <h2
           className={`${ppNeueCorpWideMedium.variable} font-pp-wide-medium text-black text-4xl md:text-5xl lg:text-6xl mb-12 text-center`}
