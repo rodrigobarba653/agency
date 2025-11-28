@@ -7,6 +7,7 @@ import {
   ppNeueCorpWideUltrabold,
 } from "./fonts";
 import Nav from "./components/Nav";
+import Loader from "./components/Loader";
 
 export const metadata: Metadata = {
   title: "Agency.ge",
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body
         className={`${ppNeueCorpNormalMedium.variable} ${ppNeueCorpNormalUltralight.variable} ${ppNeueCorpWideMedium.variable} ${ppNeueCorpWideUltrabold.variable} antialiased`}
       >
+        <Loader />
         <Nav />
         {children}
       </body>
