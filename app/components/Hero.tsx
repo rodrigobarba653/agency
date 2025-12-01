@@ -24,7 +24,7 @@ export default function Hero({
   svgContent,
   svgPath,
   className = "",
-  duration = 0.6,
+  duration = 1.5,
   delay = 0,
   width,
   height,
@@ -40,6 +40,7 @@ export default function Hero({
   const anosRef = useRef<HTMLParagraphElement>(null);
   const logoContainerRef = useRef<HTMLDivElement>(null);
   const geIconArrowRef = useRef<HTMLDivElement>(null);
+  const geCircleRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string | null>(null);
 
   // Load SVG from file if path is provided
@@ -244,10 +245,10 @@ export default function Hero({
           bounceAnimation.kill();
         }
 
-        // Create continuous bounce loop
+        // Create continuous bounce loop with more pronounced bounce
         bounceAnimation = gsap.to(arrowSvg, {
-          y: -8,
-          duration: 0.5,
+          y: -20, // Increased from -8 to -20 for more bounce
+          duration: 0.6, // Slightly longer duration for smoother bounce
           ease: "power2.out",
           yoyo: true,
           repeat: -1, // Infinite repeat
@@ -407,12 +408,38 @@ export default function Hero({
     speed: 0.3,
   });
 
-  // Parallax scroll effect for ge icon with arrow
-  useParallax({
-    elementRef: geIconArrowRef,
-    containerRef: heroSectionRef,
-    speed: -0.5,
-  });
+  // Continuous spinning animation for GE circle
+  useEffect(() => {
+    // Only start animation when SVG is loaded (component is fully rendered)
+    if (!svg) return;
+
+    const initSpin = () => {
+      if (!geCircleRef.current) {
+        // Retry if element isn't ready yet
+        setTimeout(initSpin, 100);
+        return;
+      }
+
+      const geCircle = geCircleRef.current;
+
+      // Set transform origin to center for proper rotation
+      gsap.set(geCircle, {
+        transformOrigin: "center center",
+        rotation: 0,
+      });
+
+      // Create infinite rotation animation
+      gsap.to(geCircle, {
+        rotation: 360,
+        duration: 10, // 10 seconds for one full rotation (adjust for speed)
+        ease: "none", // Linear rotation, no easing
+        repeat: -1, // Infinite repeat
+      });
+    };
+
+    // Small delay to ensure element is rendered
+    setTimeout(initSpin, 200);
+  }, [svg]);
 
   if (!svg) {
     return (
@@ -461,12 +488,17 @@ export default function Hero({
           className="flex flex-col items-center gap-4 shrink-0"
         >
           {/* ge circle icon */}
-          <div className="w-16 h-16 rounded-full border-2 border-white flex items-center justify-center">
-            <span
-              className={`${ppNeueCorpNormalMedium.variable} font-pp-normal-medium text-white text-4xl mb-2`}
+          <div className="w-16 h-16 flex items-center justify-center">
+            <div
+              ref={geCircleRef}
+              className="w-16 h-16 rounded-full border-2 border-white flex items-center justify-center"
             >
-              ge
-            </span>
+              <span
+                className={`${ppNeueCorpNormalMedium.variable} font-pp-normal-medium text-white text-4xl mb-2`}
+              >
+                ge
+              </span>
+            </div>
           </div>
           {/* Arrow pointing down - much longer */}
           <svg

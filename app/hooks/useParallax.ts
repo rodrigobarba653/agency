@@ -76,13 +76,17 @@ export function useParallax({
 
       initializeOffset();
 
-      const handleScroll = () => {
+      const handleScroll = (event?: Event | CustomEvent) => {
         if (!elementRef.current) return;
 
         // Re-initialize offset in case layout changed
         initializeOffset();
 
-        const scrollY = window.scrollY || window.pageYOffset;
+        // Get scroll position from smooth scroll event or fallback to window.scrollY
+        let scrollY = window.scrollY || window.pageYOffset;
+        if (event && "detail" in event && event.detail?.scrollY !== undefined) {
+          scrollY = event.detail.scrollY;
+        }
 
         // Calculate scroll amount relative to container entry
         // When scrollY equals containerOffsetTop: scrollAmount = 0
@@ -98,8 +102,11 @@ export function useParallax({
         });
       };
 
-      scrollHandler = handleScroll;
+      scrollHandler = handleScroll as () => void;
+      
+      // Listen to both native scroll and smooth scroll custom event
       window.addEventListener("scroll", handleScroll, { passive: true });
+      window.addEventListener("smoothscroll", handleScroll as EventListener, { passive: true });
       handleScroll(); // Initial call to set starting position
     };
 
@@ -110,6 +117,7 @@ export function useParallax({
       if (timer) clearTimeout(timer);
       if (scrollHandler) {
         window.removeEventListener("scroll", scrollHandler);
+        window.removeEventListener("smoothscroll", scrollHandler as EventListener);
       }
     };
   }, [elementRef, containerRef, speed, enabled]);

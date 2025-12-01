@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <div className="bg-black pt-20 overflow-x-hidden">
       <div className="flex min-h-screen items-center justify-center">
-        <Hero svgContent={logoSVG} duration={1.5} delay={0.3} />
+        <Hero svgContent={logoSVG} duration={2.5} delay={0.3} />
       </div>
       <Acerca />
       <Clients />

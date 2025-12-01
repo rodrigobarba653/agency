@@ -8,6 +8,7 @@ import {
 } from "./fonts";
 import Nav from "./components/Nav";
 import Loader from "./components/Loader";
+import SmoothScroll from "./components/SmoothScroll";
 
 export const metadata: Metadata = {
   title: "Agency.ge",
@@ -24,6 +25,7 @@ export default function RootLayout({
       <body
         className={`${ppNeueCorpNormalMedium.variable} ${ppNeueCorpNormalUltralight.variable} ${ppNeueCorpWideMedium.variable} ${ppNeueCorpWideUltrabold.variable} antialiased`}
       >
+        <SmoothScroll />
         <Loader />
         <Nav />
         {children}
