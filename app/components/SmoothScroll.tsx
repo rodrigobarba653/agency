@@ -12,15 +12,30 @@ export default function SmoothScroll() {
 
     const html = document.documentElement;
     const body = document.body;
+    let scrollContent: HTMLElement | null = null;
 
     // Wait for page to be fully loaded
     const init = () => {
+      // Find the content wrapper
+      scrollContent = document.getElementById("smooth-scroll-content");
+      if (!scrollContent) {
+        console.warn("SmoothScroll: Content wrapper not found");
+        return;
+      }
+      
+      scrollContent.style.willChange = "transform";
+      
       // Set initial styles - don't move DOM nodes, just control overflow
       body.style.overflow = "hidden";
       html.style.overflow = "hidden";
 
       // Get the actual scroll height
       const getScrollHeight = () => {
+        if (scrollContent) {
+          // Use the content wrapper's scroll height, which includes all content
+          return scrollContent.scrollHeight;
+        }
+        // Fallback to body/html calculations
         return Math.max(
           body.scrollHeight,
           body.offsetHeight,
@@ -47,9 +62,13 @@ export default function SmoothScroll() {
           isScrolling = true;
         }
 
-        // Apply transform to body instead of moving nodes
-        body.style.transform = `translate3d(0, ${-current}px, 0)`;
-        body.style.willChange = "transform";
+        // Apply transform to content wrapper instead of body (so nav stays fixed)
+        if (scrollContent) {
+          scrollContent.style.transform = `translate3d(0, ${-current}px, 0)`;
+        }
+
+        // Expose current scroll position for scroll-to-section calculations
+        (window as any).__smoothScrollCurrent = current;
 
         // Dispatch custom event with current scroll position for parallax hooks
         window.dispatchEvent(
@@ -135,12 +154,25 @@ export default function SmoothScroll() {
         }
       };
 
+      // Handle programmatic scroll-to-section
+      const handleScrollTo = (e: CustomEvent) => {
+        if (e.detail?.targetY !== undefined) {
+          target = e.detail.targetY;
+          target = Math.max(0, Math.min(target, getScrollHeight() - window.innerHeight));
+          isScrolling = true;
+          if (rafId === null) {
+            rafId = requestAnimationFrame(lerp);
+          }
+        }
+      };
+
       // Add event listeners
       window.addEventListener("wheel", handleWheel, { passive: false });
       window.addEventListener("touchstart", handleTouchStart, { passive: true });
       window.addEventListener("touchmove", handleTouchMove, { passive: false });
       window.addEventListener("touchend", handleTouchEnd, { passive: true });
       window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("smoothscrollto", handleScrollTo as EventListener);
 
       // Start initial animation loop
       rafId = requestAnimationFrame(lerp);
@@ -155,10 +187,13 @@ export default function SmoothScroll() {
         window.removeEventListener("touchmove", handleTouchMove);
         window.removeEventListener("touchend", handleTouchEnd);
         window.removeEventListener("keydown", handleKeyDown);
+        window.removeEventListener("smoothscrollto", handleScrollTo as EventListener);
 
         // Clean up styles
-        body.style.transform = "";
-        body.style.willChange = "";
+        if (scrollContent) {
+          scrollContent.style.transform = "";
+          scrollContent.style.willChange = "";
+        }
         body.style.overflow = "";
         html.style.overflow = "";
       };

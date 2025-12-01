@@ -13,7 +13,7 @@ export default function Clients() {
   const duplicatedClients = [...clients, ...clients, ...clients];
 
   return (
-    <section className="bg-black py-16 md:py-24 border-t border-white border-b overflow-hidden">
+    <section id="clientes" className="bg-black py-16 md:py-24 border-t border-white border-b overflow-hidden">
       <div className="relative">
         <div className="flex animate-scroll">
           {duplicatedClients.map((client, index) => (

@@ -94,7 +94,7 @@ export default function Eventos() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="bg-black py-16 md:py-24">
+    <section id="eventos" ref={sectionRef} className="bg-black py-16 md:py-24">
       <div className="container mx-auto px-6">
         <h2 className="text-white text-4xl md:text-5xl lg:text-6xl mb-12 text-center">
           Eventos

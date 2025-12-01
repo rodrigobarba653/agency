@@ -28,7 +28,7 @@ export default function RootLayout({
         <SmoothScroll />
         <Loader />
         <Nav />
-        {children}
+        <div id="smooth-scroll-content">{children}</div>
       </body>
     </html>
   );

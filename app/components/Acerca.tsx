@@ -145,6 +145,7 @@ export default function Acerca() {
 
   return (
     <section
+      id="acerca"
       ref={sectionRef}
       className="flex flex-col lg:flex-row min-h-screen bg-black"
     >

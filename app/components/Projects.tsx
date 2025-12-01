@@ -90,6 +90,7 @@ export default function Projects() {
 
   return (
     <section
+      id="proyectos"
       ref={sectionRef}
       className="relative bg-white py-16 md:py-24 overflow-hidden"
     >

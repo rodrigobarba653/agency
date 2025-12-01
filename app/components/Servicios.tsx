@@ -365,7 +365,7 @@ export default function Servicios() {
   }, [openSection]);
 
   return (
-    <section className="bg-black py-16 md:py-24">
+    <section id="servicios" className="bg-black py-16 md:py-24">
       <div className="container mx-auto px-6">
         <div className="max-w-6xl mx-auto text-center">
           {servicios.map((servicio, index) => {

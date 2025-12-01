@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { ppNeueCorpWideMedium } from "../fonts";
 
 const navItems = [
-  { href: "/acerca", label: "ACERCA" },
-  { href: "/servicios", label: "SERVICIOS" },
-  { href: "/marcas", label: "MARCAS" },
-  { href: "/contacto", label: "CONTACTO" },
+  { sectionId: "acerca", label: "ACERCA" },
+  { sectionId: "clientes", label: "CLIENTES" },
+  { sectionId: "servicios", label: "SERVICIOS" },
+  { sectionId: "proyectos", label: "PROYECTOS" },
+  { sectionId: "eventos", label: "EVENTOS" },
+  { sectionId: "contacto", label: "CONTACTO" },
 ];
 
 // Generate a hand-drawn style path with messy U-turns (triple line effect)
@@ -135,31 +137,108 @@ function generateDoodlePath(width: number): string {
 }
 
 export default function Nav() {
-  const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
   const underlineRef = useRef<SVGPathElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const linkRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
+  const linkRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuOverlayRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      // Find active item index
-      const activeItemIndex = navItems.findIndex(
-        (item) => pathname === item.href || pathname.startsWith(item.href)
+  // Smooth scroll to section function
+  const scrollToSection = (sectionId: string) => {
+    if (typeof window === "undefined" || typeof document === "undefined")
+      return;
+
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+
+    // Check if smooth scroll is active (content wrapper exists and has transform)
+    const contentWrapper = document.getElementById("smooth-scroll-content");
+    const isSmoothScrollActive =
+      contentWrapper &&
+      window.getComputedStyle(contentWrapper).transform !== "none";
+
+    // Get section position - offsetTop works correctly for both cases
+    // It gives position relative to offsetParent (contentWrapper in our case)
+    const navHeight = 80;
+    let targetScroll = section.offsetTop - navHeight;
+
+    // Ensure target is not negative (allow scrolling to top/hero)
+    targetScroll = Math.max(0, targetScroll);
+
+    if (isSmoothScrollActive) {
+      // Use smooth scroll system - dispatch custom event
+      window.dispatchEvent(
+        new CustomEvent("smoothscrollto", {
+          detail: { targetY: targetScroll },
+        })
       );
+    } else {
+      // Fallback to native smooth scroll
+      window.scrollTo({
+        top: targetScroll,
+        behavior: "smooth",
+      });
+    }
 
-      if (activeItemIndex === -1) {
-        setActiveIndex(-1);
-        if (svgRef.current) {
-          svgRef.current.style.display = "none";
+    // Close mobile menu if open
+    setIsMenuOpen(false);
+  };
+
+  // Update active section based on scroll position
+  useEffect(() => {
+    // Only run in browser
+    if (typeof window === "undefined") return;
+
+    const updateActiveSection = () => {
+      const scrollY = window.scrollY || window.pageYOffset;
+      const navHeight = 80;
+
+      // Find which section is currently in view
+      let activeSectionIndex = -1;
+      navItems.forEach((item, index) => {
+        const section = document.getElementById(item.sectionId);
+        if (section) {
+          const sectionTop = section.offsetTop - navHeight;
+          const sectionBottom = sectionTop + section.offsetHeight;
+          if (scrollY >= sectionTop && scrollY < sectionBottom) {
+            activeSectionIndex = index;
+          }
         }
-        return;
-      }
+      });
 
-      setActiveIndex(activeItemIndex);
-      const activeLink = linkRefs.current[navItems[activeItemIndex].href];
+      setActiveIndex(activeSectionIndex);
+    };
+
+    // Listen to both native scroll and smooth scroll events
+    const handleScroll = () => {
+      updateActiveSection();
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("smoothscroll", handleScroll, { passive: true });
+    updateActiveSection(); // Initial call
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("smoothscroll", handleScroll);
+    };
+  }, []);
+
+  // Update underline animation when active index changes
+  useEffect(() => {
+    if (activeIndex === -1) {
+      if (svgRef.current) {
+        svgRef.current.style.display = "none";
+      }
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const activeItem = navItems[activeIndex];
+      const activeLink = linkRefs.current[activeItem.sectionId];
 
       if (!activeLink || !underlineRef.current || !navRef.current) return;
 
@@ -198,10 +277,57 @@ export default function Nav() {
     }, 10);
 
     return () => clearTimeout(timer);
-  }, [pathname]);
+  }, [activeIndex]);
+
+  // Animate menu open/close
+  useEffect(() => {
+    if (!menuRef.current || !menuOverlayRef.current) return;
+
+    if (isMenuOpen) {
+      // Open menu
+      gsap.set([menuRef.current, menuOverlayRef.current], {
+        display: "block",
+      });
+      gsap.fromTo(
+        menuOverlayRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: "power2.out" }
+      );
+      gsap.fromTo(
+        menuRef.current,
+        { x: "100%" },
+        { x: "0%", duration: 0.4, ease: "power2.out" }
+      );
+      // Prevent body scroll when menu is open
+      document.body.style.overflow = "hidden";
+    } else {
+      // Close menu
+      gsap.to(menuOverlayRef.current, {
+        opacity: 0,
+        duration: 0.3,
+        ease: "power2.in",
+      });
+      gsap.to(menuRef.current, {
+        x: "100%",
+        duration: 0.4,
+        ease: "power2.in",
+        onComplete: () => {
+          if (menuRef.current && menuOverlayRef.current) {
+            gsap.set([menuRef.current, menuOverlayRef.current], {
+              display: "none",
+            });
+          }
+          document.body.style.overflow = "";
+        },
+      });
+    }
+  }, [isMenuOpen]);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black">
+    <nav
+      className="fixed top-0 left-0 right-0 z-[9999] bg-black"
+      style={{ position: "fixed" }}
+    >
       <div
         ref={navRef}
         className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-8"
@@ -220,31 +346,53 @@ export default function Nav() {
           </div>
         </Link>
 
-        {/* Navigation Items - clean, monospaced-like */}
-        <div className="flex items-center gap-6 md:gap-10 lg:gap-12">
-          {navItems.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(item.href);
+        {/* Navigation Items - desktop only */}
+        <div className="hidden md:flex items-center gap-6 md:gap-10 lg:gap-12">
+          {navItems.map((item, index) => {
+            const isActive = activeIndex === index;
             return (
-              <Link
-                key={item.href}
+              <button
+                key={item.sectionId}
                 ref={(el) => {
-                  linkRefs.current[item.href] = el;
+                  linkRefs.current[item.sectionId] = el;
                 }}
-                href={item.href}
-                className="font-pp-normal-ultralight relative text-sm uppercase tracking-[0.15em] text-white transition-colors hover:text-white/80"
+                onClick={() => scrollToSection(item.sectionId)}
+                className="font-pp-normal-ultralight relative text-sm uppercase tracking-[0.15em] text-white transition-colors hover:text-white/80 cursor-pointer bg-transparent border-none"
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
                 {item.label}
-              </Link>
+              </button>
             );
           })}
         </div>
 
+        {/* Hamburger Menu Button - mobile only */}
+        <button
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="md:hidden flex flex-col gap-1.5 p-2 text-white focus:outline-none"
+          aria-label="Toggle menu"
+        >
+          <span
+            className={`block w-6 h-0.5 bg-white transition-all duration-300 ${
+              isMenuOpen ? "rotate-45 translate-y-2" : ""
+            }`}
+          />
+          <span
+            className={`block w-6 h-0.5 bg-white transition-all duration-300 ${
+              isMenuOpen ? "opacity-0" : ""
+            }`}
+          />
+          <span
+            className={`block w-6 h-0.5 bg-white transition-all duration-300 ${
+              isMenuOpen ? "-rotate-45 -translate-y-2" : ""
+            }`}
+          />
+        </button>
+
         {/* Animated Doodle Underline */}
         <svg
           ref={svgRef}
-          className="pointer-events-none absolute"
+          className="pointer-events-none absolute hidden md:block"
           style={{ overflow: "visible", display: "none" }}
           viewBox="0 0 100 14"
           preserveAspectRatio="none"
@@ -259,6 +407,53 @@ export default function Nav() {
             strokeLinejoin="round"
           />
         </svg>
+      </div>
+
+      {/* Mobile Offcanvas Menu */}
+      {/* Overlay */}
+      <div
+        ref={menuOverlayRef}
+        className="md:hidden fixed inset-0 bg-black/80 z-40"
+        style={{ display: "none" }}
+        onClick={() => setIsMenuOpen(false)}
+      />
+
+      {/* Menu Panel */}
+      <div
+        ref={menuRef}
+        className="md:hidden fixed top-0 right-0 h-full w-full bg-black z-50 overflow-y-auto"
+        style={{ display: "none", transform: "translateX(100%)" }}
+      >
+        <div className="flex flex-col items-center justify-center min-h-screen px-8 py-20">
+          {/* Close Button */}
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className="absolute top-6 right-6 text-white text-4xl focus:outline-none"
+            aria-label="Close menu"
+          >
+            ×
+          </button>
+
+          {/* Menu Items - Big Fonts */}
+          <nav className="flex flex-col items-center gap-8 md:gap-12">
+            {navItems.map((item, index) => {
+              const isActive = activeIndex === index;
+              return (
+                <button
+                  key={item.sectionId}
+                  onClick={() => scrollToSection(item.sectionId)}
+                  className={`${
+                    ppNeueCorpWideMedium.variable
+                  } font-pp-wide-medium text-white text-5xl md:text-6xl lg:text-7xl uppercase tracking-wider transition-opacity hover:opacity-70 cursor-pointer bg-transparent border-none ${
+                    isActive ? "opacity-100" : "opacity-80"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
       </div>
     </nav>
   );
