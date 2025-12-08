@@ -173,11 +173,11 @@ export default function Acerca() {
             <h2
               className={`${ppNeueCorpWideMedium.variable} font-pp-neue-corp-wide-medium text-white text-4xl md:text-5xl lg:text-6xl`}
             >
-              Ideas Imposibles
+              Transformamos ideas en experiencias que conectan.
             </h2>
             {/* Doodle - absolutely positioned - zig zag pattern */}
             <svg
-              className="absolute lg:-top-4 -top-20 sm:mr-0 -mr-16 right-0 text-white"
+              className="absolute lg:top-0 -top-20 sm:mr-0 -mr-16 right-0 text-white"
               width="200"
               height="200"
               viewBox="0 0 120 120"
@@ -222,24 +222,20 @@ export default function Acerca() {
             className={`${ppNeueCorpNormalUltralight.variable} font-pp-normal-ultralight text-white space-y-6 text-base md:text-lg leading-relaxed`}
           >
             <p>
-              Campañas que conectan a nivel humano, conceptos que se convierten
-              en parte de la cultura diseñados para evolucionar con las marcas y
-              crecer junto con nuestros clientes.
+              Somos una agencia creativa y estratégica que combina diseño,
+              visión y producción para dar forma a momentos memorables y
+              funcionales.
             </p>
             <p>
-              Operamos proyectos nacionales e internacionales, con talleres de
-              display in-house y una plataforma audiovisual propia que nos
-              permite controlar cada detalle con la calidad que nos distingue.
+              Creemos en el poder de una buena idea bien desarrollada: una
+              visión que evoluciona, se define y se materializa en un espacio,
+              una interacción o una vivencia que permanece en las personas.
             </p>
             <p>
-              Trabajamos con{" "}
-              <span
-                className={`${ppNeueCorpNormalMedium.variable} font-pp-normal-medium`}
-              >
-                marcas de talla internacional
-              </span>{" "}
-              en diferentes industrias (CPG, lujo, servicios financieros,
-              entretenimiento, deportes y más)
+              Nuestro trabajo es acompañar ese proceso de principio a fin,
+              integrando claridad, estética y excelencia operativa. Diseñamos
+              experiencias que sirven a un propósito, fortalecen marcas y
+              generan valor real.
             </p>
           </div>
         </div>

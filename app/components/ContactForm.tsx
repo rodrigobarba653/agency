@@ -20,9 +20,7 @@ export default function ContactForm() {
     setFormData((prev) => ({
       ...prev,
       [name]:
-        type === "checkbox"
-          ? (e.target as HTMLInputElement).checked
-          : value,
+        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
   };
 
@@ -37,8 +35,7 @@ export default function ContactForm() {
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-black text-3xl md:text-4xl lg:text-5xl mb-12 text-center">
-            Danos una campaña, una marca o un reto y lo convertimos en una
-            historia que la gente quiera ver, compartir y recordar.
+            Transformamos ideas en realidades.
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -197,4 +194,3 @@ export default function ContactForm() {
     </section>
   );
 }
-

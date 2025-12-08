@@ -151,33 +151,44 @@ function generateDoodlePath(width: number): string {
 
 const servicios = [
   {
-    id: "experiencia",
-    title: "Experiencia de Marca",
+    id: "experiencias",
+    title: "Experiencias & Activaciones",
     services: [
-      "Activaciones → Lanzamientos → Sampling → Punto de venta",
-      "→ Estrategias de engagement → Conceptualización",
+      "Diseñamos activaciones que conectan marcas con audiencias a través de momentos memorables, inmersivos y estratégicos.",
     ],
   },
   {
-    id: "produccion",
-    title: "Producción de Eventos",
+    id: "eventos",
+    title: "Eventos Corporativos",
     services: [
-      "Eventos corporativos → Conferencias → Lanzamientos de producto",
-      "→ Producción audiovisual → Diseño de espacios",
+      "Producción integral y operación impecable para eventos de alto impacto que fortalecen cultura, comunicación y propósito.",
+    ],
+  },
+  {
+    id: "display",
+    title: "Display",
+    services: [
+      "Creamos espacios que narran ideas. Diseños estructurados, funcionales y estéticos que elevan la presencia de marca.",
     ],
   },
   {
     id: "logistica",
-    title: "Logística y Operación",
+    title: "Logística & Producción",
     services: [
-      "Coordinación de eventos → Gestión de proveedores → Transporte",
-      "→ Almacenamiento → Montaje y desmontaje",
+      "Coordinación integral, precisión operativa y ejecución sin fricción. Transformamos conceptos en operaciones reales a través de procesos claros y una supervisión minuciosa.",
+    ],
+  },
+  {
+    id: "creatividad",
+    title: "Creatividad & Diseño",
+    services: [
+      "Desarrollamos conceptos visuales contemporáneos que expresan la esencia de cada marca con claridad y estilo.",
     ],
   },
 ];
 
 export default function Servicios() {
-  const [openSection, setOpenSection] = useState<string>("experiencia");
+  const [openSection, setOpenSection] = useState<string>("experiencias");
   const titleRefs = useRef<{ [key: string]: HTMLHeadingElement | null }>({});
   const svgRefs = useRef<{ [key: string]: SVGSVGElement | null }>({});
   const pathRefs = useRef<{ [key: string]: SVGPathElement | null }>({});
@@ -199,8 +210,8 @@ export default function Servicios() {
     let wordIndex = 0;
     let wordWidth = 0;
 
-    // For "Producción de Eventos", target "Eventos" specifically
-    if (servicio.id === "produccion") {
+    // For "Eventos Corporativos", target "Eventos" specifically
+    if (servicio.id === "eventos") {
       wordIndex = words.findIndex((word) => word.toLowerCase() === "eventos");
       if (wordIndex !== -1) {
         selectedWord = words[wordIndex];
@@ -387,9 +398,9 @@ export default function Servicios() {
                       }}
                       className={`${
                         ppNeueCorpWideMedium.variable
-                      } font-pp-wide-medium text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl mb-4 transition-colors duration-300 relative whitespace-nowrap ${
+                      } font-pp-wide-medium text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl mb-4 transition-colors duration-300 relative whitespace-nowrap cursor-pointer ${
                         isOpen ? "text-white" : "text-white/40"
-                      }`}
+                      } ${!isOpen ? "hover:text-white/80" : ""}`}
                     >
                       {servicio.title}
                     </h3>
@@ -430,7 +441,7 @@ export default function Servicios() {
                         return (
                           <p
                             key={serviceIndex}
-                            className={`text-white text-lg md:text-xl lg:text-2xl transition-opacity duration-500 flex items-center justify-center flex-wrap gap-2 ${
+                            className={`text-white text-lg md:text-xl lg:text-2xl transition-opacity duration-500 flex items-center justify-center flex-wrap gap-2 max-w-3xl mx-auto ${
                               isOpen ? "opacity-100" : "opacity-0"
                             }`}
                           >
