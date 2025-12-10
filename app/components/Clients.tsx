@@ -1,16 +1,21 @@
 "use client";
 
-export default function Clients() {
-  const clients = [
-    { name: "Continental", logo: "Continental" },
-    { name: "PORSCHE", logo: "PORSCHE" },
-    { name: "swatch+", logo: "swatch+" },
-    { name: "Cartier", logo: "Cartier" },
-    { name: "MONTBLANC", logo: "MONTBLANC" },
-  ];
+import Image from "next/image";
 
-  // Duplicate clients for seamless infinite scroll
-  const duplicatedClients = [...clients, ...clients, ...clients];
+export default function Clients() {
+  // Generate array of all 32 logos
+  const clients = Array.from({ length: 32 }, (_, i) => ({
+    name: `Client ${i + 1}`,
+    logo: `/images/logo-${i + 1}.png`,
+  }));
+
+  // Split into two rows: first 16 and last 16
+  const firstRow = clients.slice(0, 16);
+  const secondRow = clients.slice(16, 32);
+
+  // Duplicate each row for seamless infinite scroll
+  const duplicatedFirstRow = [...firstRow, ...firstRow, ...firstRow];
+  const duplicatedSecondRow = [...secondRow, ...secondRow, ...secondRow];
 
   return (
     <section className="py-16">
@@ -34,16 +39,46 @@ export default function Clients() {
         id="clientes"
         className="bg-black py-16 md:py-24 border-t border-white border-b overflow-hidden"
       >
-        <div className="relative">
+        <div className="relative space-y-8">
+          {/* First row: logo-1 to logo-16 */}
           <div className="flex animate-scroll">
-            {duplicatedClients.map((client, index) => (
+            {duplicatedFirstRow.map((client, index) => (
               <div
-                key={index}
+                key={`first-${index}`}
                 className="flex items-center justify-center shrink-0 px-8 md:px-12 lg:px-16"
               >
-                <span className="text-white text-xl md:text-2xl lg:text-3xl font-light opacity-80 whitespace-nowrap">
-                  {client.logo}
-                </span>
+                <Image
+                  src={client.logo}
+                  alt={client.name}
+                  width={200}
+                  height={100}
+                  className="object-contain opacity-80 h-8 md:h-12 lg:h-8 w-auto"
+                  style={{
+                    filter: "brightness(0) invert(1)",
+                    WebkitFilter: "brightness(0) invert(1)",
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+          {/* Second row: logo-17 to logo-32 */}
+          <div className="flex animate-scroll-reverse">
+            {duplicatedSecondRow.map((client, index) => (
+              <div
+                key={`second-${index}`}
+                className="flex items-center justify-center shrink-0 px-8 md:px-12 lg:px-16"
+              >
+                <Image
+                  src={client.logo}
+                  alt={client.name}
+                  width={200}
+                  height={100}
+                  className="object-contain opacity-80 h-8 md:h-12 lg:h-8 w-auto"
+                  style={{
+                    filter: "brightness(0) invert(1)",
+                    WebkitFilter: "brightness(0) invert(1)",
+                  }}
+                />
               </div>
             ))}
           </div>
