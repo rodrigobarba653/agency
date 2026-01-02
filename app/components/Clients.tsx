@@ -18,9 +18,9 @@ export default function Clients() {
   const duplicatedSecondRow = [...secondRow, ...secondRow, ...secondRow];
 
   return (
-    <section className="py-16">
-      <div className="max-w-5xl mx-auto text-center pb-8">
-        <div className="ppNeueCorpNormalUltralight.variable font-pp-normal-ultralight text-white space-y-6 text-base md:text-lg leading-relaxed">
+    <section className="md:py-16">
+      <div className="max-w-5xl mx-auto md:text-center md:pt-8 pb-24 pt-0 md:px-0 px-12">
+        <div className="ppNeueCorpNormalUltralight.variable font-pp-normal-ultralight text-white space-y-6 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
           <h2 className="font-pp-neue-corp-wide-medium text-white text-4xl md:text-5xl lg:text-6xl">
             Clientes
           </h2>
@@ -39,7 +39,7 @@ export default function Clients() {
         id="clientes"
         className="bg-black py-16 md:py-24 border-t border-white border-b overflow-hidden"
       >
-        <div className="relative space-y-8">
+        <div className="relative space-y-0">
           {/* First row: logo-1 to logo-16 */}
           <div className="flex animate-scroll">
             {duplicatedFirstRow.map((client, index) => (
@@ -52,7 +52,7 @@ export default function Clients() {
                   alt={client.name}
                   width={200}
                   height={100}
-                  className="object-contain opacity-80 h-8 md:h-12 lg:h-8 w-auto"
+                  className="object-contain opacity-80 w-16 md:w-24 lg:w-28"
                   style={{
                     filter: "brightness(0) invert(1)",
                     WebkitFilter: "brightness(0) invert(1)",
@@ -73,7 +73,7 @@ export default function Clients() {
                   alt={client.name}
                   width={200}
                   height={100}
-                  className="object-contain opacity-80 h-8 md:h-12 lg:h-8 w-auto"
+                  className="object-contain opacity-80 w-16 md:w-24 lg:w-28"
                   style={{
                     filter: "brightness(0) invert(1)",
                     WebkitFilter: "brightness(0) invert(1)",

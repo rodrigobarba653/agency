@@ -142,9 +142,11 @@ export default function Nav() {
   const svgRef = useRef<SVGSVGElement>(null);
   const linkRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [hoveredIndex, setHoveredIndex] = useState(-1);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuOverlayRef = useRef<HTMLDivElement>(null);
+  const navItemWidths = useRef<{ [key: string]: number }>({});
 
   // Smooth scroll to section function
   const scrollToSection = (sectionId: string) => {
@@ -227,9 +229,49 @@ export default function Nav() {
     };
   }, []);
 
-  // Update underline animation when active index changes
+  // Measure nav item widths with medium font to prevent layout shift
   useEffect(() => {
-    if (activeIndex === -1) {
+    if (typeof window === "undefined" || typeof document === "undefined")
+      return;
+
+    const measureWidths = () => {
+      // Create a temporary hidden element to measure text width with medium font
+      const measureElement = document.createElement("span");
+      measureElement.style.position = "absolute";
+      measureElement.style.visibility = "hidden";
+      measureElement.style.whiteSpace = "nowrap";
+      measureElement.style.fontSize = "0.875rem"; // text-sm
+      measureElement.style.textTransform = "uppercase";
+      measureElement.style.letterSpacing = "0.15em"; // tracking-[0.15em]
+      measureElement.style.fontVariantNumeric = "tabular-nums";
+      measureElement.className = "font-pp-normal-medium";
+      document.body.appendChild(measureElement);
+
+      // Measure each nav item's width with medium font
+      navItems.forEach((item) => {
+        measureElement.textContent = item.label;
+        const width = measureElement.offsetWidth;
+        navItemWidths.current[item.sectionId] = width;
+
+        // Apply the width to the button
+        const button = linkRefs.current[item.sectionId];
+        if (button) {
+          button.style.minWidth = `${width}px`;
+        }
+      });
+
+      // Cleanup
+      document.body.removeChild(measureElement);
+    };
+
+    // Small delay to ensure DOM is ready and refs are populated
+    const timer = setTimeout(measureWidths, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Update underline animation only when hovered (not when active)
+  useEffect(() => {
+    if (hoveredIndex === -1) {
       if (svgRef.current) {
         svgRef.current.style.display = "none";
       }
@@ -237,14 +279,14 @@ export default function Nav() {
     }
 
     const timer = setTimeout(() => {
-      const activeItem = navItems[activeIndex];
-      const activeLink = linkRefs.current[activeItem.sectionId];
+      const hoveredItem = navItems[hoveredIndex];
+      const hoveredLink = linkRefs.current[hoveredItem.sectionId];
 
-      if (!activeLink || !underlineRef.current || !navRef.current) return;
+      if (!hoveredLink || !underlineRef.current || !navRef.current) return;
 
-      // Get position and dimensions of active link
+      // Get position and dimensions of hovered link
       const navRect = navRef.current.getBoundingClientRect();
-      const linkRect = activeLink.getBoundingClientRect();
+      const linkRect = hoveredLink.getBoundingClientRect();
 
       const left = linkRect.left - navRect.left;
       const width = linkRect.width;
@@ -264,6 +306,11 @@ export default function Nav() {
         svgRef.current.style.display = "block";
       }
 
+      // Apply opacity on hover
+      if (underlineRef.current) {
+        underlineRef.current.style.opacity = "0.8";
+      }
+
       // Animate the path drawing (faster animation)
       const pathLength = underlineRef.current.getTotalLength();
       underlineRef.current.style.strokeDasharray = `${pathLength}`;
@@ -277,7 +324,7 @@ export default function Nav() {
     }, 10);
 
     return () => clearTimeout(timer);
-  }, [activeIndex]);
+  }, [hoveredIndex]);
 
   // Animate menu open/close
   useEffect(() => {
@@ -324,10 +371,7 @@ export default function Nav() {
   }, [isMenuOpen]);
 
   return (
-    <nav
-      className="fixed top-0 left-0 right-0 z-[9999] bg-black"
-      style={{ position: "fixed" }}
-    >
+    <nav className="fixed top-0 left-0 right-0 z-[9999] bg-black">
       <div
         ref={navRef}
         className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-8"
@@ -347,7 +391,7 @@ export default function Nav() {
         </Link>
 
         {/* Navigation Items - desktop only */}
-        <div className="hidden md:flex items-center gap-6 md:gap-10 lg:gap-12">
+        <div className="hidden lg:flex items-center gap-6 md:gap-10 lg:gap-12">
           {navItems.map((item, index) => {
             const isActive = activeIndex === index;
             return (
@@ -357,7 +401,13 @@ export default function Nav() {
                   linkRefs.current[item.sectionId] = el;
                 }}
                 onClick={() => scrollToSection(item.sectionId)}
-                className="font-pp-normal-ultralight relative text-sm uppercase tracking-[0.15em] text-white transition-colors hover:text-white/80 cursor-pointer bg-transparent border-none"
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(-1)}
+                className={`${
+                  isActive
+                    ? "font-pp-normal-medium"
+                    : "font-pp-normal-ultralight"
+                } relative text-sm uppercase tracking-[0.15em] text-white transition-colors hover:text-white/80 cursor-pointer bg-transparent border-none`}
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
                 {item.label}
@@ -369,7 +419,7 @@ export default function Nav() {
         {/* Hamburger Menu Button - mobile only */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="md:hidden flex flex-col gap-1.5 p-2 text-white focus:outline-none"
+          className="lg:hidden flex flex-col gap-1.5 p-2 text-white focus:outline-none"
           aria-label="Toggle menu"
         >
           <span

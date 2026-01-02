@@ -9,7 +9,6 @@ export default function ContactForm() {
     telefono: "",
     nombreEmpresa: "",
     servicioInteres: "",
-    presupuesto: "",
     aceptaPrivacidad: false,
   });
 
@@ -133,28 +132,6 @@ export default function ContactForm() {
                     className="w-full bg-transparent border-0 border-b-2 border-black focus:outline-none focus:border-black pb-2 text-black"
                   />
                 </div>
-
-                <div>
-                  <label
-                    htmlFor="presupuesto"
-                    className="block text-black text-sm mb-2"
-                  >
-                    Presupuesto
-                  </label>
-                  <select
-                    id="presupuesto"
-                    name="presupuesto"
-                    value={formData.presupuesto}
-                    onChange={handleChange}
-                    className="w-full bg-transparent border-0 border-b-2 border-black focus:outline-none focus:border-black pb-2 text-black appearance-none cursor-pointer"
-                  >
-                    <option value="">Selecciona un rango</option>
-                    <option value="menos-50k">Menos de $50,000</option>
-                    <option value="50k-100k">$50,000 - $100,000</option>
-                    <option value="100k-250k">$100,000 - $250,000</option>
-                    <option value="mas-250k">Más de $250,000</option>
-                  </select>
-                </div>
               </div>
             </div>
 
@@ -185,7 +162,7 @@ export default function ContactForm() {
                 type="submit"
                 className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition-colors"
               >
-                Cotizar
+                Contactar
               </button>
             </div>
           </form>
