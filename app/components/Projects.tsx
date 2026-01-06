@@ -13,6 +13,7 @@ export default function Projects() {
   const speedMultiplierRef = useRef(1); // 1 = normal, >1 = faster, <1 = slower
   const directionRef = useRef<"forward" | "backward">("forward");
   const isHoldingRef = useRef(false);
+  const isHoveringRef = useRef(false);
   const accelerationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Duplicate projects for seamless loop
@@ -37,6 +38,13 @@ export default function Projects() {
 
       const scrollWidth = container.scrollWidth;
       const singleSetWidth = scrollWidth / 2;
+
+      // Stop scrolling if hovering
+      if (isHoveringRef.current) {
+        rafId = requestAnimationFrame(animate);
+        return;
+      }
+
       const speed =
         (directionRef.current === "forward" ? 1 : -1) *
         speedMultiplierRef.current;
@@ -118,6 +126,14 @@ export default function Projects() {
     resetToNormalSpeed();
   };
 
+  const handleCarouselMouseEnter = () => {
+    isHoveringRef.current = true;
+  };
+
+  const handleCarouselMouseLeave = () => {
+    isHoveringRef.current = false;
+  };
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -157,6 +173,8 @@ export default function Projects() {
         <div className="relative w-full">
           <div
             ref={carouselRef}
+            onMouseEnter={handleCarouselMouseEnter}
+            onMouseLeave={handleCarouselMouseLeave}
             className="flex gap-6 overflow-x-hidden items-center w-full"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
