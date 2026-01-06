@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { ppNeueCorpWideMedium } from "../fonts";
 import Wave from "./Wave";
 import { useParallax } from "../hooks/useParallax";
@@ -15,6 +16,8 @@ export default function Projects() {
   const isHoldingRef = useRef(false);
   const isHoveringRef = useRef(false);
   const accelerationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollTimeRef = useRef<number>(Date.now());
+  const scrollVelocityRef = useRef<number>(0);
 
   // Duplicate projects for seamless loop
   const duplicatedProjects = [...projects, ...projects];
@@ -45,13 +48,22 @@ export default function Projects() {
         return;
       }
 
-      const speed =
-        (directionRef.current === "forward" ? 1 : -1) *
-        speedMultiplierRef.current;
-      const scrollAmount = 3 * speed; // Base scroll speed
+      const now = Date.now();
+      const deltaTime = Math.min(now - lastScrollTimeRef.current, 50) / 16.67; // Normalize to ~60fps
+      lastScrollTimeRef.current = now;
 
-      // Update scroll position
-      container.scrollLeft += scrollAmount;
+      const targetSpeed =
+        (directionRef.current === "forward" ? 1 : -1) *
+        speedMultiplierRef.current *
+        3; // Base scroll speed
+
+      // Smooth ease-in-out: gradually accelerate/decelerate to target speed
+      const acceleration = 0.15; // Easing factor (0-1, lower = smoother)
+      scrollVelocityRef.current +=
+        (targetSpeed - scrollVelocityRef.current) * acceleration;
+
+      // Update scroll position with smooth easing
+      container.scrollLeft += scrollVelocityRef.current * deltaTime;
 
       // Handle seamless looping
       if (directionRef.current === "forward") {
@@ -82,6 +94,7 @@ export default function Projects() {
     speedMultiplierRef.current = 1;
     directionRef.current = "forward";
     isHoldingRef.current = false;
+    scrollVelocityRef.current = 0; // Reset velocity for smooth restart
 
     // Clear acceleration interval
     if (accelerationIntervalRef.current) {
@@ -176,19 +189,37 @@ export default function Projects() {
             onMouseEnter={handleCarouselMouseEnter}
             onMouseLeave={handleCarouselMouseLeave}
             className="flex gap-6 overflow-x-hidden items-center w-full"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            style={{
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              scrollBehavior: "smooth",
+            }}
           >
             {duplicatedProjects.map((project, index) => (
               <div
                 key={`${project.id}-${index}`}
-                className="shrink-0 rounded-lg overflow-hidden bg-gray-800"
+                className="shrink-0 rounded-lg overflow-hidden bg-gray-800 relative group cursor-pointer"
                 style={{
                   width: `${project.width}px`,
                   height: `${project.height}px`,
                 }}
               >
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <span className="text-sm">{project.title}</span>
+                <Image
+                  src={project.image}
+                  alt={project.title}
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  sizes={`${project.width}px`}
+                />
+                {/* Dark overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors duration-300" />
+                {/* Project title */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                  <h3
+                    className={`${ppNeueCorpWideMedium.variable} font-pp-wide-medium text-white text-2xl md:text-3xl text-center px-4`}
+                  >
+                    {project.title}
+                  </h3>
                 </div>
               </div>
             ))}
