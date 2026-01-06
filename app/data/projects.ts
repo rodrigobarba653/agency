@@ -4,6 +4,7 @@ export interface Project {
   image: string;
   width: number;
   height: number;
+  folder: string; // Folder name to get all images
 }
 
 export const projects: Project[] = [
@@ -13,6 +14,7 @@ export const projects: Project[] = [
     image: "/images/projects/amazon/cover.jpg",
     width: 500,
     height: 281, // 16:9 aspect ratio (1920x1080)
+    folder: "amazon",
   },
   {
     id: 2,
@@ -20,6 +22,7 @@ export const projects: Project[] = [
     image: "/images/projects/royalcanin/cover.jpg",
     width: 500,
     height: 750, // 2:3 aspect ratio (720x1080)
+    folder: "royalcanin",
   },
   {
     id: 3,
@@ -27,6 +30,7 @@ export const projects: Project[] = [
     image: "/images/projects/natura/cover.jpg",
     width: 500,
     height: 421, // Aspect ratio (1281x1080)
+    folder: "natura",
   },
 
   {
@@ -35,5 +39,6 @@ export const projects: Project[] = [
     image: "/images/projects/talent/cover.jpg",
     width: 500,
     height: 667, // Aspect ratio (810x1080)
+    folder: "talent",
   },
 ];

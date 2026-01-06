@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ppNeueCorpWideMedium } from "../fonts";
 import Wave from "./Wave";
 import { useParallax } from "../hooks/useParallax";
-import { projects } from "../data/projects";
+import { projects, Project } from "../data/projects";
+import ProjectModal from "./ProjectModal";
 
 export default function Projects() {
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -18,6 +19,7 @@ export default function Projects() {
   const accelerationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollTimeRef = useRef<number>(Date.now());
   const scrollVelocityRef = useRef<number>(0);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   // Duplicate projects for seamless loop
   const duplicatedProjects = [...projects, ...projects];
@@ -186,8 +188,6 @@ export default function Projects() {
         <div className="relative w-full">
           <div
             ref={carouselRef}
-            onMouseEnter={handleCarouselMouseEnter}
-            onMouseLeave={handleCarouselMouseLeave}
             className="flex gap-6 overflow-x-hidden items-center w-full"
             style={{
               scrollbarWidth: "none",
@@ -198,6 +198,9 @@ export default function Projects() {
             {duplicatedProjects.map((project, index) => (
               <div
                 key={`${project.id}-${index}`}
+                onClick={() => setSelectedProject(project)}
+                onMouseEnter={handleCarouselMouseEnter}
+                onMouseLeave={handleCarouselMouseLeave}
                 className="shrink-0 rounded-lg overflow-hidden bg-gray-800 relative group cursor-pointer"
                 style={{
                   width: `${project.width}px`,
@@ -265,6 +268,12 @@ export default function Projects() {
           </button>
         </div>
       </div>
+
+      {/* Project Modal */}
+      <ProjectModal
+        project={selectedProject}
+        onClose={() => setSelectedProject(null)}
+      />
     </section>
   );
 }
