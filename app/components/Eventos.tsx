@@ -3,6 +3,8 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import Frame from "./Frame";
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
+import { isElementInView } from "../utils/viewUtils";
 
 const eventos = [
   {
@@ -21,11 +23,12 @@ export default function Eventos() {
   const sectionRef = useRef<HTMLElement>(null);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Animate images on scroll into view
+  // Animate images on scroll into view (with staggered delays)
   useEffect(() => {
     if (!sectionRef.current) return;
 
     const section = sectionRef.current;
+    let hasAnimated = false;
 
     // Initialize images as hidden and positioned below
     imageRefs.current.forEach((imageRef) => {
@@ -37,44 +40,48 @@ export default function Eventos() {
       }
     });
 
-    // Function to animate images
+    // Function to animate images with staggered delays
     const animateImages = () => {
-      imageRefs.current.forEach((imageRef, index) => {
+      if (hasAnimated) return;
+      hasAnimated = true;
+
+      // Reset first
+      imageRefs.current.forEach((imageRef) => {
         if (imageRef) {
-          gsap.to(imageRef, {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            delay: index * 0.2, // Small delay between each image
-            ease: "power2.out",
+          gsap.set(imageRef, {
+            opacity: 0,
+            y: 50,
           });
         }
       });
+
+      // Animate with staggered delays
+      requestAnimationFrame(() => {
+        imageRefs.current.forEach((imageRef, index) => {
+          if (imageRef) {
+            gsap.to(imageRef, {
+              opacity: 1,
+              y: 0,
+              duration: 0.8,
+              delay: index * 0.2,
+              ease: "power2.out",
+            });
+          }
+        });
+      });
     };
 
-    // Intersection Observer to trigger animation when section comes into view
+    // Intersection Observer
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            // Reset and animate
-            imageRefs.current.forEach((imageRef) => {
-              if (imageRef) {
-                gsap.set(imageRef, {
-                  opacity: 0,
-                  y: 50,
-                });
-              }
-            });
-            // Small delay to ensure reset is applied
-            requestAnimationFrame(() => {
-              animateImages();
-            });
+            animateImages();
           }
         });
       },
       {
-        threshold: 0.2, // Trigger when 20% of the section is visible
+        threshold: 0.2,
         rootMargin: "0px",
       }
     );
@@ -82,9 +89,7 @@ export default function Eventos() {
     observer.observe(section);
 
     // Animate on initial mount if already in view
-    const rect = section.getBoundingClientRect();
-    const windowHeight = window.innerHeight;
-    if (rect.top < windowHeight && rect.bottom > 0) {
+    if (isElementInView(section)) {
       animateImages();
     }
 

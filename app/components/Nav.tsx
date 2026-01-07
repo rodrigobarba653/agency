@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ppNeueCorpWideMedium } from "../fonts";
+import { fadeIn, fadeOut, slideIn, slideOut, animatePathStroke } from "../utils/gsapAnimations";
 
 const navItems = [
   { sectionId: "acerca", label: "ACERCA" },
@@ -316,8 +317,7 @@ export default function Nav() {
       underlineRef.current.style.strokeDasharray = `${pathLength}`;
       underlineRef.current.style.strokeDashoffset = `${pathLength}`;
 
-      gsap.to(underlineRef.current, {
-        strokeDashoffset: 0,
+      animatePathStroke(underlineRef.current, {
         duration: 0.35,
         ease: "power1.out",
       });
@@ -335,27 +335,25 @@ export default function Nav() {
       gsap.set([menuRef.current, menuOverlayRef.current], {
         display: "block",
       });
-      gsap.fromTo(
-        menuOverlayRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.3, ease: "power2.out" }
-      );
-      gsap.fromTo(
-        menuRef.current,
-        { x: "100%" },
-        { x: "0%", duration: 0.4, ease: "power2.out" }
-      );
+      fadeIn(menuOverlayRef.current, {
+        duration: 0.3,
+        ease: "power2.out",
+      });
+      slideIn(menuRef.current, {
+        from: "right",
+        duration: 0.4,
+        ease: "power2.out",
+      });
       // Prevent body scroll when menu is open
       document.body.style.overflow = "hidden";
     } else {
       // Close menu
-      gsap.to(menuOverlayRef.current, {
-        opacity: 0,
+      fadeOut(menuOverlayRef.current, {
         duration: 0.3,
         ease: "power2.in",
       });
-      gsap.to(menuRef.current, {
-        x: "100%",
+      slideOut(menuRef.current, {
+        to: "right",
         duration: 0.4,
         ease: "power2.in",
         onComplete: () => {

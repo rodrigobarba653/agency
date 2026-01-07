@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ppNeueCorpWideMedium } from "../fonts";
+import { animatePathStroke } from "../utils/gsapAnimations";
 
 // Generate a pixelated Z-shaped doodle pattern
 function generateZDoodlePath(width: number): string {
@@ -330,12 +331,7 @@ export default function Servicios() {
     svgRef.setAttribute("viewBox", `0 0 ${width} 14`);
     svgRef.style.display = "block";
 
-    const pathLength = pathRef.getTotalLength();
-    pathRef.style.strokeDasharray = `${pathLength}`;
-    pathRef.style.strokeDashoffset = `${pathLength}`;
-
-    gsap.to(pathRef, {
-      strokeDashoffset: 0,
+    animatePathStroke(pathRef, {
       duration: 0.5,
       ease: "power2.out",
     });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { gsap } from "gsap";
+import { fadeOut } from "../utils/gsapAnimations";
 
 export default function Loader() {
   const [isLoading, setIsLoading] = useState(true);
@@ -44,8 +44,8 @@ export default function Loader() {
       // Small delay to ensure everything is ready
       setTimeout(() => {
         // Fade out loader
-        gsap.to(".loader-container", {
-          opacity: 0,
+        const loaderElement = document.querySelector(".loader-container") as HTMLElement;
+        fadeOut(loaderElement, {
           duration: 0.5,
           ease: "power2.out",
           onComplete: () => {

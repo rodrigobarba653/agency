@@ -16,6 +16,8 @@ export default function Projects() {
   const directionRef = useRef<"forward" | "backward">("forward");
   const isHoldingRef = useRef(false);
   const isHoveringRef = useRef(false);
+  const isModalOpenRef = useRef(false);
+  const animationRef = useRef<number | null>(null);
   const accelerationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollTimeRef = useRef<number>(Date.now());
   const scrollVelocityRef = useRef<number>(0);
@@ -36,47 +38,77 @@ export default function Projects() {
     if (!carouselRef.current) return;
 
     const container = carouselRef.current;
-    let rafId: number;
+    let rafId: number | null = null;
 
-    const animate = () => {
-      if (!container) return;
-
-      const scrollWidth = container.scrollWidth;
-      const singleSetWidth = scrollWidth / 2;
-
-      // Stop scrolling if hovering
-      if (isHoveringRef.current) {
+    const animate = (timestamp: number) => {
+      if (!container) {
         rafId = requestAnimationFrame(animate);
         return;
       }
 
+      // Pause if modal is open or hovering
+      if (isModalOpenRef.current || isHoveringRef.current) {
+        // Keep the loop running but don't update scroll
+        rafId = requestAnimationFrame(animate);
+        return;
+      }
+
+      const scrollWidth = container.scrollWidth;
+      const singleSetWidth = scrollWidth / 2;
+
+      // Only proceed if we have valid dimensions
+      if (scrollWidth === 0 || singleSetWidth === 0) {
+        rafId = requestAnimationFrame(animate);
+        return;
+      }
+
+      // Calculate delta time
       const now = Date.now();
-      const deltaTime = Math.min(now - lastScrollTimeRef.current, 50) / 16.67; // Normalize to ~60fps
+      const deltaTime = Math.min(now - lastScrollTimeRef.current, 50) / 16.67;
       lastScrollTimeRef.current = now;
 
-      const targetSpeed =
-        (directionRef.current === "forward" ? 1 : -1) *
-        speedMultiplierRef.current *
-        3; // Base scroll speed
+      // Only animate if deltaTime is valid
+      if (deltaTime > 0) {
+        const targetSpeed =
+          (directionRef.current === "forward" ? 1 : -1) *
+          speedMultiplierRef.current *
+          3;
 
-      // Smooth ease-in-out: gradually accelerate/decelerate to target speed
-      const acceleration = 0.15; // Easing factor (0-1, lower = smoother)
-      scrollVelocityRef.current +=
-        (targetSpeed - scrollVelocityRef.current) * acceleration;
+        // Smooth ease-in-out
+        const acceleration = 0.15;
+        scrollVelocityRef.current +=
+          (targetSpeed - scrollVelocityRef.current) * acceleration;
 
-      // Update scroll position with smooth easing
-      container.scrollLeft += scrollVelocityRef.current * deltaTime;
+        // Get current scroll position
+        const currentScroll = container.scrollLeft;
 
-      // Handle seamless looping
-      if (directionRef.current === "forward") {
-        if (container.scrollLeft >= singleSetWidth) {
-          container.scrollLeft = container.scrollLeft - singleSetWidth;
+        // Calculate new scroll position
+        let newScroll = currentScroll + scrollVelocityRef.current * deltaTime;
+
+        // Handle seamless looping - reset at boundary for seamless transition
+        if (directionRef.current === "forward") {
+          // When we reach the duplicate point, reset to beginning
+          if (newScroll >= singleSetWidth) {
+            // Calculate how far past the boundary we are
+            const overflow = newScroll - singleSetWidth;
+            // Reset to the equivalent position in the first set (0 to singleSetWidth)
+            newScroll = overflow;
+          }
+        } else {
+          // For backward scrolling, when we go past 0, loop to the end
+          if (newScroll < 0) {
+            // Calculate how far past 0 we are (negative value)
+            const underflow = newScroll;
+            // Reset to the equivalent position in the second set
+            newScroll = singleSetWidth + underflow;
+          }
         }
-      } else {
-        // For backward scrolling, when we go past 0, loop to the end
-        if (container.scrollLeft <= 0) {
-          container.scrollLeft = singleSetWidth;
-        }
+
+        // Ensure scroll is within valid bounds
+        newScroll = Math.max(0, Math.min(newScroll, singleSetWidth - 1));
+
+        // Apply scroll position atomically
+        container.scrollLeft = newScroll;
       }
 
       rafId = requestAnimationFrame(animate);
@@ -86,11 +118,24 @@ export default function Projects() {
     rafId = requestAnimationFrame(animate);
 
     return () => {
-      if (rafId) {
+      if (rafId !== null) {
         cancelAnimationFrame(rafId);
       }
     };
   }, []);
+
+  // Track modal state to pause carousel
+  useEffect(() => {
+    isModalOpenRef.current = selectedProject !== null;
+    if (isModalOpenRef.current) {
+      // Clear any acceleration when modal opens
+      isHoldingRef.current = false;
+      if (accelerationIntervalRef.current) {
+        clearInterval(accelerationIntervalRef.current);
+        accelerationIntervalRef.current = null;
+      }
+    }
+  }, [selectedProject]);
 
   const resetToNormalSpeed = () => {
     speedMultiplierRef.current = 1;
@@ -192,7 +237,6 @@ export default function Projects() {
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
-              scrollBehavior: "smooth",
             }}
           >
             {duplicatedProjects.map((project, index) => (

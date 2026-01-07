@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
 
 interface FrameProps {
   className?: string;
@@ -19,74 +20,46 @@ export default function Frame({
   const framePathRef = useRef<SVGPathElement>(null);
 
   // Animate frame path on scroll into view
+  useScrollAnimation({
+    elementRef: framePathRef,
+    sectionRef: animateOnScroll ? sectionRef : undefined,
+    initialProps: (element) => {
+      const pathLength = (element as SVGPathElement).getTotalLength();
+      return {
+        strokeDasharray: pathLength,
+        strokeDashoffset: pathLength,
+        strokeWidth: "2",
+      };
+    },
+    animateProps: {
+      strokeDashoffset: 0,
+      duration: 2,
+      delay: delay,
+      ease: "power2.out",
+    },
+    enabled: animateOnScroll,
+  });
+
+  // If animateOnScroll is false, animate immediately
   useEffect(() => {
-    if (!animateOnScroll || !framePathRef.current) return;
+    if (!animateOnScroll && framePathRef.current) {
+      const framePath = framePathRef.current;
+      const pathLength = framePath.getTotalLength();
+      
+      gsap.set(framePath, {
+        strokeDasharray: pathLength,
+        strokeDashoffset: pathLength,
+        strokeWidth: "2",
+      });
 
-    const framePath = framePathRef.current;
-    let observer: IntersectionObserver | null = null;
-
-    // Set up the path for animation
-    const pathLength = framePath.getTotalLength();
-
-    // Initialize the path as hidden
-    gsap.set(framePath, {
-      strokeDasharray: pathLength,
-      strokeDashoffset: pathLength,
-      strokeWidth: "2",
-    });
-
-    // Function to animate the frame
-    const animateFrame = () => {
       gsap.to(framePath, {
         strokeDashoffset: 0,
         duration: 2,
         delay: delay,
         ease: "power2.out",
       });
-    };
-
-    if (sectionRef?.current) {
-      // Use provided section ref for intersection observer
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              // Reset and animate
-              gsap.set(framePath, {
-                strokeDashoffset: pathLength,
-                strokeWidth: "2",
-              });
-              requestAnimationFrame(() => {
-                animateFrame();
-              });
-            }
-          });
-        },
-        {
-          threshold: 0.2,
-          rootMargin: "0px",
-        }
-      );
-
-      observer.observe(sectionRef.current);
-
-      // Animate on initial mount if already in view
-      const rect = sectionRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      if (rect.top < windowHeight && rect.bottom > 0) {
-        animateFrame();
-      }
-    } else {
-      // If no section ref, animate immediately
-      animateFrame();
     }
-
-    return () => {
-      if (observer) {
-        observer.disconnect();
-      }
-    };
-  }, [animateOnScroll, sectionRef, delay]);
+  }, [animateOnScroll, delay]);
 
   return (
     <svg

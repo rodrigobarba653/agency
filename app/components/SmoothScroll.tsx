@@ -29,6 +29,18 @@ export default function SmoothScroll() {
       body.style.overflow = "hidden";
       html.style.overflow = "hidden";
 
+      // Helper to detect when modal is open or event is inside modal
+      const isModalActive = (targetEl?: EventTarget | null) => {
+        const modalOpen = html.classList.contains("modal-open");
+        if (modalOpen) return true;
+        const modalRoot = document.getElementById("project-modal-root");
+        if (!modalRoot) return modalOpen;
+        if (targetEl && targetEl instanceof Node) {
+          return modalRoot.contains(targetEl);
+        }
+        return modalOpen;
+      };
+
       // Get the actual scroll height
       const getScrollHeight = () => {
         if (scrollContent) {
@@ -82,6 +94,9 @@ export default function SmoothScroll() {
 
       // Update scroll position on wheel
       const handleWheel = (e: WheelEvent) => {
+        if (isModalActive(e.target)) {
+          return; // don't hijack scrolling while modal is active
+        }
         e.preventDefault();
         isScrolling = true;
         target += e.deltaY;
@@ -97,11 +112,17 @@ export default function SmoothScroll() {
       let touchScroll = 0;
 
       const handleTouchStart = (e: TouchEvent) => {
+        if (isModalActive(e.target)) {
+          return;
+        }
         touchStart = e.touches[0].clientY;
         touchScroll = target;
       };
 
       const handleTouchMove = (e: TouchEvent) => {
+        if (isModalActive(e.target)) {
+          return; // allow modal to handle touch scrolling
+        }
         if (!touchStart) return;
         e.preventDefault();
         isScrolling = true;
@@ -116,11 +137,17 @@ export default function SmoothScroll() {
       };
 
       const handleTouchEnd = () => {
+        if (isModalActive()) {
+          return;
+        }
         touchStart = 0;
       };
 
       // Keyboard navigation
       const handleKeyDown = (e: KeyboardEvent) => {
+        if (isModalActive(e.target)) {
+          return; // do not move background with keyboard while modal is open
+        }
         if (e.key === "ArrowDown" || e.key === "PageDown") {
           e.preventDefault();
           isScrolling = true;

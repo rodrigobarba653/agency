@@ -71,13 +71,121 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (project) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
+    if (!project) return;
+
+    // Save current scroll position
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+
+    // Get all elements that might scroll
+    const body = document.body;
+    const html = document.documentElement;
+
+    // Mark modal as open (for SmoothScroll to detect)
+    html.classList.add("modal-open");
+
+    // Save original values
+    const originalBodyStyle = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      width: body.style.width,
+      height: body.style.height,
+      touchAction: body.style.touchAction,
+    };
+
+    const originalHtmlStyle = {
+      overflow: html.style.overflow,
+      height: html.style.height,
+      touchAction: html.style.touchAction,
+    };
+
+    // Lock scrolling - use position fixed approach
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.width = "100%";
+    body.style.height = "100%";
+    body.style.touchAction = "none"; // Prevent touch scrolling on body
+
+    html.style.overflow = "hidden";
+    html.style.height = "100%";
+    html.style.touchAction = "none"; // Prevent touch scrolling on html
+
+    // Prevent scroll events - but allow scrolling within modal's scrollable areas
+    const preventScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      // Allow scrolling only within elements with overflow-y-auto class
+      const scrollableParent = target.closest(".overflow-y-auto");
+      if (!scrollableParent) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    const preventWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement;
+      const scrollableParent = target.closest(".overflow-y-auto");
+      if (!scrollableParent) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    const preventTouchMove = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      const scrollableParent = target.closest(".overflow-y-auto");
+      if (!scrollableParent) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    // Add event listeners - use capture phase to catch early
+    const options = { passive: false, capture: true };
+    window.addEventListener("scroll", preventScroll, options);
+    window.addEventListener("wheel", preventWheel, options);
+    window.addEventListener("touchmove", preventTouchMove, options);
+    document.addEventListener("scroll", preventScroll, options);
+    document.addEventListener("wheel", preventWheel, options);
+    document.addEventListener("touchmove", preventTouchMove, options);
+
+    // Cleanup
     return () => {
-      document.body.style.overflow = "unset";
+      // Remove all event listeners
+      window.removeEventListener("scroll", preventScroll, { capture: true });
+      window.removeEventListener("wheel", preventWheel, { capture: true });
+      window.removeEventListener("touchmove", preventTouchMove, {
+        capture: true,
+      });
+      document.removeEventListener("scroll", preventScroll, { capture: true });
+      document.removeEventListener("wheel", preventWheel, { capture: true });
+      document.removeEventListener("touchmove", preventTouchMove, {
+        capture: true,
+      });
+
+      // Restore original styles
+      body.style.overflow = originalBodyStyle.overflow;
+      body.style.position = originalBodyStyle.position;
+      body.style.top = originalBodyStyle.top;
+      body.style.left = originalBodyStyle.left;
+      body.style.width = originalBodyStyle.width;
+      body.style.height = originalBodyStyle.height;
+      body.style.touchAction = originalBodyStyle.touchAction;
+
+      html.style.overflow = originalHtmlStyle.overflow;
+      html.style.height = originalHtmlStyle.height;
+      html.style.touchAction = originalHtmlStyle.touchAction;
+
+      // Remove modal-open class
+      html.classList.remove("modal-open");
+
+      // Restore scroll position
+      window.scrollTo(0, scrollY);
     };
   }, [project]);
 
@@ -92,7 +200,14 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
   if (!project || !isMounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-9999 bg-black">
+    <div
+      id="project-modal-root"
+      className="fixed inset-0 z-9999 overflow-hidden bg-black"
+      style={{
+        overscrollBehavior: "contain",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
       {/* Close Button */}
       <button
         onClick={onClose}
@@ -114,9 +229,9 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
       </button>
 
       {/* Vertical Stack Layout - Mobile Version */}
-      <div className="flex flex-col h-full md:hidden">
+      <div className="flex flex-col h-full md:hidden bg-black">
         {/* Top - Title and Description */}
-        <div className="bg-black p-8 overflow-y-auto">
+        <div className="p-8 overflow-y-auto" style={{ touchAction: "pan-y" }}>
           <h2
             className={`${ppNeueCorpWideMedium.variable} font-pp-wide-medium text-white text-3xl mb-6`}
           >
@@ -145,10 +260,9 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
         </div>
 
         {/* Bottom - Image Carousel */}
-        <div className="flex-1 relative bg-black">
+        <div className="flex-1 relative">
           {images.length > 0 && (
             <>
-              {/* Main Image */}
               <div className="relative w-full h-full">
                 <Image
                   src={images[currentImageIndex]}
@@ -164,7 +278,7 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
                 <>
                   <button
                     onClick={handlePrevious}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm z-10"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/40 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm z-10"
                     aria-label="Previous image"
                   >
                     <svg
@@ -181,7 +295,7 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
 
                   <button
                     onClick={handleNext}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm z-10"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/40 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-sm z-10"
                     aria-label="Next image"
                   >
                     <svg
@@ -209,13 +323,12 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
         </div>
       </div>
 
-      {/* 50/50 Split Layout - Desktop Version */}
+      {/* Desktop Layout: 50/50 Split */}
       <div className="hidden md:flex h-full">
         {/* Left Side - Image Carousel */}
-        <div className="w-1/2 relative bg-black">
+        <div className="w-1/2 relative">
           {images.length > 0 && (
             <>
-              {/* Main Image */}
               <div className="relative w-full h-full">
                 <Image
                   src={images[currentImageIndex]}
@@ -276,7 +389,10 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
         </div>
 
         {/* Right Side - Title and Description */}
-        <div className="w-1/2 bg-black p-12 md:p-16 lg:p-20 flex flex-col justify-center overflow-y-auto">
+        <div
+          className="w-1/2 p-12 md:p-16 lg:p-20 flex flex-col justify-center overflow-y-auto"
+          style={{ touchAction: "pan-y" }}
+        >
           <h2
             className={`${ppNeueCorpWideMedium.variable} font-pp-wide-medium text-white text-4xl md:text-5xl lg:text-6xl mb-8`}
           >
@@ -308,3 +424,4 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
     document.body
   );
 }
+

@@ -2,6 +2,9 @@ import { gsap } from "gsap";
 
 /**
  * Animates an SVG path to draw from start to end
+ * This is the core function for single path animations.
+ * Also exported as animatePathStroke in gsapAnimations.ts for consistency.
+ * 
  * @param pathElement - The SVG path element to animate
  * @param duration - Animation duration in seconds (default: 0.6)
  * @param delay - Delay before animation starts in seconds (default: 0)

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
 
 interface WaveProps {
   className?: string;
@@ -16,70 +17,82 @@ export default function Wave({
 }: WaveProps) {
   const wavePathRef = useRef<SVGPathElement>(null);
 
+  // Wait for SVG to render before setting up animation
   useEffect(() => {
     if (!wavePathRef.current) return;
 
     const wavePath = wavePathRef.current;
-    let observer: IntersectionObserver | null = null;
+    const pathLength = wavePath.getTotalLength();
 
-    // Wait a bit for SVG to render
-    const initAnimation = () => {
-      const pathLength = wavePath.getTotalLength();
+    if (pathLength === 0) {
+      // Retry if path length is 0 (SVG not rendered yet)
+      setTimeout(() => {
+        if (wavePathRef.current) {
+          const retryLength = wavePathRef.current.getTotalLength();
+          if (retryLength > 0) {
+            gsap.set(wavePathRef.current, {
+              strokeDasharray: retryLength,
+              strokeDashoffset: retryLength,
+              stroke: "#000000",
+              strokeWidth: "3",
+            });
+          }
+        }
+      }, 100);
+      return;
+    }
 
-      if (pathLength === 0) {
-        // Retry if path length is 0 (SVG not rendered yet)
-        setTimeout(initAnimation, 100);
-        return;
-      }
+    // Initialize path properties
+    gsap.set(wavePath, {
+      strokeDasharray: pathLength,
+      strokeDashoffset: pathLength,
+      stroke: "#000000",
+      strokeWidth: "3",
+    });
+  }, []);
 
-      gsap.set(wavePath, {
-        strokeDasharray: pathLength,
+  // Animate wave path on scroll into view
+  useScrollAnimation({
+    elementRef: wavePathRef,
+    sectionRef: animateOnScroll ? sectionRef : undefined,
+    initialProps: (element) => {
+      const pathLength = (element as SVGPathElement).getTotalLength();
+      return {
         strokeDashoffset: pathLength,
         stroke: "#000000",
         strokeWidth: "3",
-      });
+      };
+    },
+    animateProps: {
+      strokeDashoffset: 0,
+      duration: 2.5,
+      ease: "power2.out",
+    },
+    enabled: animateOnScroll,
+  });
 
-      const animateWave = () => {
+  // If animateOnScroll is false, animate immediately
+  useEffect(() => {
+    if (!animateOnScroll && wavePathRef.current) {
+      const wavePath = wavePathRef.current;
+      const pathLength = wavePath.getTotalLength();
+
+      if (pathLength > 0) {
+        gsap.set(wavePath, {
+          strokeDasharray: pathLength,
+          strokeDashoffset: pathLength,
+          stroke: "#000000",
+          strokeWidth: "3",
+        });
+
         gsap.to(wavePath, {
           strokeDashoffset: 0,
           duration: 2.5,
           ease: "power2.out",
         });
-      };
-
-      if (animateOnScroll && sectionRef?.current) {
-        observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                // Reset and animate
-                gsap.set(wavePath, {
-                  strokeDashoffset: pathLength,
-                  stroke: "#000000",
-                  strokeWidth: "3",
-                });
-                requestAnimationFrame(() => {
-                  animateWave();
-                });
-              }
-            });
-          },
-          { threshold: 0.2 }
-        );
-        observer.observe(sectionRef.current);
-      } else if (!animateOnScroll) {
-        // Animate immediately if animateOnScroll is false
-        animateWave();
       }
-    };
-
-    // Small delay to ensure SVG is rendered
-    setTimeout(initAnimation, 50);
-
-    return () => {
-      if (observer) observer.disconnect();
-    };
-  }, [animateOnScroll, sectionRef]);
+    }
+  }, [animateOnScroll]);
 
   return (
     <svg
