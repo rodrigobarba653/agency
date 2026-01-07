@@ -432,7 +432,7 @@ export default function HeroVideo({
     setTimeout(initSpin, 200);
   }, [svg]);
 
-  // Video play once on desktop
+  // Video play once on desktop and notify when loaded
   useEffect(() => {
     if (!videoRef.current) return;
 
@@ -443,8 +443,30 @@ export default function HeroVideo({
       return window.innerWidth >= 768; // md breakpoint in Tailwind
     };
 
+    // Handle video loaded event
+    const handleLoadedData = () => {
+      // Dispatch custom event to notify Loader that video is ready
+      // This allows Loader to hide after video loads
+      window.dispatchEvent(new CustomEvent("hero-video-loaded"));
+    };
+
+    // Handle video can play (even better - video is ready to play)
+    const handleCanPlay = () => {
+      window.dispatchEvent(new CustomEvent("hero-video-loaded"));
+    };
+
     // Play video once when component mounts (only on desktop)
     if (checkDesktop()) {
+      // Listen for video load events
+      video.addEventListener("loadeddata", handleLoadedData);
+      video.addEventListener("canplay", handleCanPlay);
+
+      // Check if video is already loaded
+      if (video.readyState >= 3) {
+        // Video is already loaded, dispatch event immediately
+        window.dispatchEvent(new CustomEvent("hero-video-loaded"));
+      }
+
       video.play().catch((err) => {
         console.error("Error playing video:", err);
       });
@@ -459,7 +481,12 @@ export default function HeroVideo({
 
       return () => {
         video.removeEventListener("ended", handleEnded);
+        video.removeEventListener("loadeddata", handleLoadedData);
+        video.removeEventListener("canplay", handleCanPlay);
       };
+    } else {
+      // On mobile, notify immediately that we don't need to wait for video
+      window.dispatchEvent(new CustomEvent("hero-video-loaded"));
     }
   }, []);
 

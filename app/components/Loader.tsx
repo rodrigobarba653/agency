@@ -41,23 +41,66 @@ export default function Loader() {
 
     // Wait for both fonts and GSAP
     Promise.all([checkFontsLoaded(), checkGSAPReady()]).then(() => {
-      // Small delay to ensure everything is ready
-      setTimeout(() => {
-        // Fade out loader
-        const loaderElement = document.querySelector(".loader-container") as HTMLElement;
-        fadeOut(loaderElement, {
-          duration: 0.5,
-          ease: "power2.out",
-          onComplete: () => {
-            setIsLoading(false);
-            // Restore body scroll
-            document.body.style.overflow = originalOverflow;
-            document.body.style.position = originalPosition;
-            document.body.style.width = originalWidth;
-            document.body.style.height = originalHeight;
-          },
+      // Also wait for video to load (if on desktop)
+      const waitForVideo = () => {
+        return new Promise<void>((resolve) => {
+          // Check if we're on desktop
+          const isDesktop = window.innerWidth >= 768;
+          
+          if (!isDesktop) {
+            // On mobile, don't wait for video (video won't show)
+            resolve();
+            return;
+          }
+
+          // Listen for custom event from HeroVideo when video is loaded
+          const handleVideoLoaded = () => {
+            window.removeEventListener("hero-video-loaded", handleVideoLoaded);
+            resolve();
+          };
+
+          // Check if video is already loaded
+          const video = document.querySelector('video[src="/videos/logo.mp4"]') as HTMLVideoElement;
+          if (video && video.readyState >= 3) {
+            // Video is already loaded enough (HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA)
+            resolve();
+            return;
+          }
+
+          // Set a timeout fallback (max 5 seconds) to prevent indefinite waiting
+          const timeout = setTimeout(() => {
+            window.removeEventListener("hero-video-loaded", handleVideoLoaded);
+            console.warn("Video load timeout - proceeding without video");
+            resolve();
+          }, 5000);
+
+          window.addEventListener("hero-video-loaded", () => {
+            clearTimeout(timeout);
+            handleVideoLoaded();
+          });
         });
-      }, 300);
+      };
+
+      // Wait for video, then fade out loader
+      waitForVideo().then(() => {
+        // Small delay to ensure smooth transition
+        setTimeout(() => {
+          // Fade out loader
+          const loaderElement = document.querySelector(".loader-container") as HTMLElement;
+          fadeOut(loaderElement, {
+            duration: 0.5,
+            ease: "power2.out",
+            onComplete: () => {
+              setIsLoading(false);
+              // Restore body scroll
+              document.body.style.overflow = originalOverflow;
+              document.body.style.position = originalPosition;
+              document.body.style.width = originalWidth;
+              document.body.style.height = originalHeight;
+            },
+          });
+        }, 300);
+      });
     });
 
     // Cleanup function in case component unmounts
@@ -72,7 +115,7 @@ export default function Loader() {
   if (!isLoading) return null;
 
   return (
-    <div className="loader-container fixed inset-0 z-[9999] bg-black flex items-center justify-center">
+    <div className="loader-container fixed inset-0 z-[99999] bg-black flex items-center justify-center">
       <div className="text-white text-2xl md:text-4xl font-pp-normal-ultralight tracking-wider">
         Agency.ge
       </div>

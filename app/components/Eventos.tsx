@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import Image from "next/image";
 import { gsap } from "gsap";
 import Frame from "./Frame";
 import { useScrollAnimation } from "../hooks/useScrollAnimation";
@@ -10,12 +11,12 @@ const eventos = [
   {
     id: 1,
     title: "Evento 1",
-    image: "/images/evento1.jpg",
+    image: "/images/projects/amazon/amazon_005.jpg",
   },
   {
     id: 2,
     title: "Evento 2",
-    image: "/images/evento2.jpg",
+    image: "/images/projects/royalcanin/royalcanin_010.jpg",
   },
 ];
 
@@ -124,10 +125,14 @@ export default function Eventos() {
                 }}
                 className="absolute inset-0 p-12"
               >
-                <div className="w-full h-full bg-gray-800 overflow-hidden">
-                  <div className="w-full h-full flex items-center justify-center text-white/40">
-                    <span className="text-sm">{evento.title}</span>
-                  </div>
+                <div className="w-full h-full bg-gray-800 overflow-hidden relative">
+                  <Image
+                    src={evento.image}
+                    alt={evento.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
                 </div>
               </div>
             </div>
