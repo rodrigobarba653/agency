@@ -7,18 +7,38 @@ import Frame from "./Frame";
 import { useScrollAnimation } from "../hooks/useScrollAnimation";
 import { isElementInView } from "../utils/viewUtils";
 
+// Helper function to extract and format folder name from image path
+const getEventTitle = (imagePath: string): string => {
+  const parts = imagePath.split("/");
+  const folderName = parts[parts.indexOf("projects") + 1];
+
+  // Format folder names to proper titles
+  const titleMap: Record<string, string> = {
+    amazon: "Amazon",
+    natura: "Natura",
+    royalcanin: "Royal Canin",
+    talent: "Talent",
+  };
+
+  return (
+    titleMap[folderName] ||
+    folderName.charAt(0).toUpperCase() + folderName.slice(1)
+  );
+};
+
 const eventos = [
   {
     id: 1,
-    title: "Evento 1",
     image: "/images/projects/amazon/amazon_005.jpg",
   },
   {
     id: 2,
-    title: "Evento 2",
     image: "/images/projects/royalcanin/royalcanin_010.jpg",
   },
-];
+].map((evento) => ({
+  ...evento,
+  title: getEventTitle(evento.image),
+}));
 
 export default function Eventos() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -108,33 +128,39 @@ export default function Eventos() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-24 max-w-6xl mx-auto">
           {eventos.map((evento, index) => (
-            <div key={evento.id} className="relative aspect-4/3">
-              {/* Frame SVG - absolutely positioned */}
-              <div className="absolute inset-0 w-full h-full">
-                <Frame
-                  className="w-full h-full text-white"
-                  animateOnScroll={true}
-                  sectionRef={sectionRef}
-                  delay={index * 0.3}
-                />
-              </div>
-              {/* Image Container with padding */}
-              <div
-                ref={(el) => {
-                  imageRefs.current[index] = el;
-                }}
-                className="absolute inset-0 p-12"
-              >
-                <div className="w-full h-full bg-gray-800 overflow-hidden relative">
-                  <Image
-                    src={evento.image}
-                    alt={evento.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 50vw"
+            <div key={evento.id} className="flex flex-col">
+              <div className="relative aspect-4/3">
+                {/* Frame SVG - absolutely positioned */}
+                <div className="absolute inset-0 w-full h-full">
+                  <Frame
+                    className="w-full h-full text-white"
+                    animateOnScroll={true}
+                    sectionRef={sectionRef}
+                    delay={index * 0.3}
                   />
                 </div>
+                {/* Image Container with padding */}
+                <div
+                  ref={(el) => {
+                    imageRefs.current[index] = el;
+                  }}
+                  className="absolute inset-0 p-12"
+                >
+                  <div className="w-full h-full bg-gray-800 overflow-hidden relative">
+                    <Image
+                      src={evento.image}
+                      alt={evento.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                  </div>
+                </div>
               </div>
+              {/* Event Name */}
+              <h3 className="text-white text-xl md:text-2xl mt-6 text-center">
+                {evento.title}
+              </h3>
             </div>
           ))}
         </div>
