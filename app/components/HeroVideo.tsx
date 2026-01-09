@@ -9,6 +9,7 @@ import {
   ppNeueCorpNormalUltralight,
   ppNeueCorpWideMedium,
 } from "../fonts";
+import Hero from "./Hero";
 
 interface HeroVideoProps {
   svgContent?: string; // SVG code as string
@@ -43,6 +44,7 @@ export default function HeroVideo({
   const geCircleRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [svg, setSvg] = useState<string | null>(null);
+  const [videoLoadError, setVideoLoadError] = useState<boolean>(false);
 
   // Load SVG from file if path is provided
   useEffect(() => {
@@ -434,13 +436,21 @@ export default function HeroVideo({
 
   // Video play once on desktop and notify when loaded
   useEffect(() => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || videoLoadError) return;
 
     const video = videoRef.current;
 
     // Check if we're on desktop (md breakpoint)
     const checkDesktop = () => {
       return window.innerWidth >= 768; // md breakpoint in Tailwind
+    };
+
+    // Handle video error
+    const handleError = () => {
+      console.error("Video failed to load, falling back to Hero component");
+      setVideoLoadError(true);
+      // Notify loader that we're done (fallback will be shown)
+      window.dispatchEvent(new CustomEvent("hero-video-loaded"));
     };
 
     // Handle video loaded event
@@ -457,9 +467,17 @@ export default function HeroVideo({
 
     // Play video once when component mounts (only on desktop)
     if (checkDesktop()) {
+      // Listen for video error events
+      video.addEventListener("error", handleError);
       // Listen for video load events
       video.addEventListener("loadeddata", handleLoadedData);
       video.addEventListener("canplay", handleCanPlay);
+
+      // Check if video already failed
+      if (video.error) {
+        handleError();
+        return;
+      }
 
       // Check if video is already loaded
       if (video.readyState >= 3) {
@@ -469,6 +487,10 @@ export default function HeroVideo({
 
       video.play().catch((err) => {
         console.error("Error playing video:", err);
+        // If play fails, it might be because video failed to load
+        if (video.error) {
+          handleError();
+        }
       });
 
       // Prevent replay after video ends
@@ -480,6 +502,7 @@ export default function HeroVideo({
       video.addEventListener("ended", handleEnded);
 
       return () => {
+        video.removeEventListener("error", handleError);
         video.removeEventListener("ended", handleEnded);
         video.removeEventListener("loadeddata", handleLoadedData);
         video.removeEventListener("canplay", handleCanPlay);
@@ -488,7 +511,22 @@ export default function HeroVideo({
       // On mobile, notify immediately that we don't need to wait for video
       window.dispatchEvent(new CustomEvent("hero-video-loaded"));
     }
-  }, []);
+  }, [videoLoadError]);
+
+  // If video failed to load, fallback to Hero component
+  if (videoLoadError) {
+    return (
+      <Hero
+        svgContent={svgContent}
+        svgPath={svgPath}
+        className={className}
+        duration={duration}
+        delay={delay}
+        width={width}
+        height={height}
+      />
+    );
+  }
 
   if (!svg) {
     return (
@@ -521,6 +559,14 @@ export default function HeroVideo({
             playsInline
             muted
             preload="auto"
+            onError={() => {
+              console.error(
+                "Video failed to load, falling back to Hero component"
+              );
+              setVideoLoadError(true);
+              // Notify loader that we're done (fallback will be shown)
+              window.dispatchEvent(new CustomEvent("hero-video-loaded"));
+            }}
             onEnded={(e) => {
               // Ensure video stays at the end
               e.currentTarget.pause();
