@@ -493,17 +493,8 @@ export default function HeroVideo({
         }
       });
 
-      // Prevent replay after video ends
-      const handleEnded = () => {
-        video.pause();
-        video.currentTime = video.duration; // Ensure it stays at the end
-      };
-
-      video.addEventListener("ended", handleEnded);
-
       return () => {
         video.removeEventListener("error", handleError);
-        video.removeEventListener("ended", handleEnded);
         video.removeEventListener("loadeddata", handleLoadedData);
         video.removeEventListener("canplay", handleCanPlay);
       };
@@ -558,6 +549,7 @@ export default function HeroVideo({
             autoPlay
             playsInline
             muted
+            loop
             preload="auto"
             onError={() => {
               console.error(
@@ -566,11 +558,6 @@ export default function HeroVideo({
               setVideoLoadError(true);
               // Notify loader that we're done (fallback will be shown)
               window.dispatchEvent(new CustomEvent("hero-video-loaded"));
-            }}
-            onEnded={(e) => {
-              // Ensure video stays at the end
-              e.currentTarget.pause();
-              e.currentTarget.currentTime = e.currentTarget.duration;
             }}
           />
         </div>

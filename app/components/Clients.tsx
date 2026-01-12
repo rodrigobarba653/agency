@@ -20,7 +20,7 @@ export default function Clients() {
   return (
     <section className="md:py-16">
       <div className="max-w-5xl mx-auto md:text-center md:pt-8 pb-24 pt-0 md:px-0 px-12">
-        <div className="ppNeueCorpNormalUltralight.variable font-pp-normal-ultralight text-white space-y-6 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
+        <div className="ppNeueCorpNormalUltralight.variable font-pp-normal-medium text-white space-y-6 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
           <h2 className="font-pp-neue-corp-wide-medium text-white text-4xl md:text-5xl lg:text-6xl">
             Clientes
           </h2>

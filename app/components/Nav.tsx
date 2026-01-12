@@ -376,9 +376,9 @@ export default function Nav() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <div className="w-56 h-12">
+          <div className="w-16">
             <Image
-              src="/images/logo.svg"
+              src="/images/iso.png"
               alt="AGENCY"
               width={120}
               height={40}
