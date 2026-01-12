@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ppNeueCorpWideMedium } from "../fonts";
 import { fadeIn, fadeOut, slideIn, slideOut, animatePathStroke } from "../utils/gsapAnimations";
+import { generateDoodlePath } from "../utils/doodleUtils";
 
 const navItems = [
   { sectionId: "acerca", label: "ACERCA" },
@@ -15,127 +16,6 @@ const navItems = [
   { sectionId: "eventos", label: "EVENTOS" },
   { sectionId: "contacto", label: "CONTACTO" },
 ];
-
-// Generate a hand-drawn style path with messy U-turns (triple line effect)
-function generateDoodlePath(width: number): string {
-  const segments = Math.max(8, Math.floor(width / 12)); // More segments for smoother curves
-  const segmentWidth = width / segments;
-  const baseY = 2; // Starting Y position
-  const amplitude = 1.2; // Waviness for doodle effect
-  const offsetY = 3; // Vertical offset between lines
-
-  // Create a seed-based random for consistency (using width as seed)
-  const seed = width * 0.123;
-  const random = (n: number) => {
-    const x = Math.sin(n * 12.9898 + seed) * 43758.5453;
-    return x - Math.floor(x);
-  };
-
-  // Helper function to create messy U-turn
-  const createUTurn = (
-    startX: number,
-    startY: number,
-    direction: "right" | "left",
-    turnWidth: number
-  ) => {
-    const turnSegments = 6;
-    let turnPath = "";
-    for (let i = 1; i <= turnSegments; i++) {
-      const progress = i / turnSegments;
-      const angle = progress * Math.PI; // Half circle
-      const radius = 2 + (random(i + 100) - 0.5) * 1.5; // Messy radius
-      const centerX = startX;
-      const centerY = startY;
-
-      // Add chaos to the U-turn
-      const chaosX = (random(i + 200) - 0.5) * 3;
-      const chaosY = (random(i + 300) - 0.5) * 2;
-
-      let x, y;
-      if (direction === "right") {
-        x = centerX - Math.cos(angle) * radius + chaosX;
-        y = centerY + Math.sin(angle) * radius + chaosY;
-      } else {
-        x = centerX + Math.cos(angle) * radius + chaosX;
-        y = centerY + Math.sin(angle) * radius + chaosY;
-      }
-
-      const clampedX =
-        direction === "right"
-          ? Math.max(startX - turnWidth, Math.min(startX + 2, x))
-          : Math.max(startX - 2, Math.min(startX + turnWidth, x));
-      const clampedY = Math.max(0.5, Math.min(13, y));
-      turnPath += ` L ${clampedX},${clampedY}`;
-    }
-    return turnPath;
-  };
-
-  // Define line positions as percentages
-  const firstLineStart = width * 0.2; // 20%
-  const firstLineEnd = width * 0.7; // 70%
-  const secondLineStart = width * 0.7; // 70%
-  const secondLineEnd = 0; // 0%
-  const thirdLineStart = 0; // 0%
-  const thirdLineEnd = width; // 100%
-
-  // First line: from 20% to 70%
-  const firstLineLength = firstLineEnd - firstLineStart;
-  const firstLineSegments = Math.max(6, Math.floor(firstLineLength / 12));
-  const firstLineSegmentWidth = firstLineLength / firstLineSegments;
-
-  let path = `M ${firstLineStart},${
-    baseY + (random(0) - 0.5) * amplitude * 0.3
-  }`;
-
-  for (let i = 1; i <= firstLineSegments; i++) {
-    const x = firstLineStart + i * firstLineSegmentWidth;
-    const progress = i / firstLineSegments;
-    const wave = Math.sin(progress * Math.PI * 2) * 0.2;
-    const randomOffset = (random(i) - 0.5) * amplitude * 0.3;
-    const y = baseY + wave + randomOffset;
-    const clampedY = Math.max(0.5, Math.min(13, y));
-    path += ` L ${x},${clampedY}`;
-  }
-
-  // First U-turn at 70% (right end of first line)
-  const turnWidth = width * 0.1;
-  path += createUTurn(firstLineEnd, baseY + 1, "right", turnWidth);
-
-  // Second line: return from 70% to 0%
-  const secondLineLength = Math.abs(secondLineEnd - secondLineStart);
-  const secondLineSegments = Math.max(6, Math.floor(secondLineLength / 12));
-  const secondLineSegmentWidth = secondLineLength / secondLineSegments;
-
-  for (let i = secondLineSegments; i >= 0; i--) {
-    const x = secondLineStart - i * secondLineSegmentWidth;
-    const progress = i / secondLineSegments;
-    const wave = Math.sin(progress * Math.PI * 2) * 0.2;
-    const randomOffset = (random(i + 500) - 0.5) * amplitude * 0.3;
-    const y = baseY + offsetY + wave + randomOffset;
-    const clampedY = Math.max(0.5, Math.min(13, y));
-    path += ` L ${x},${clampedY}`;
-  }
-
-  // Second U-turn at 0% (left end)
-  path += createUTurn(secondLineEnd, baseY + offsetY + 1, "left", turnWidth);
-
-  // Third line: from 0% to 100% (full width)
-  const thirdLineLength = thirdLineEnd - thirdLineStart;
-  const thirdLineSegments = Math.max(8, Math.floor(thirdLineLength / 12));
-  const thirdLineSegmentWidth = thirdLineLength / thirdLineSegments;
-
-  for (let i = 1; i <= thirdLineSegments; i++) {
-    const x = thirdLineStart + i * thirdLineSegmentWidth;
-    const progress = i / thirdLineSegments;
-    const wave = Math.sin(progress * Math.PI * 2) * 0.2;
-    const randomOffset = (random(i + 1000) - 0.5) * amplitude * 0.3;
-    const y = baseY + offsetY * 2 + wave + randomOffset;
-    const clampedY = Math.max(0.5, Math.min(13, y));
-    path += ` L ${x},${clampedY}`;
-  }
-
-  return path;
-}
 
 export default function Nav() {
   const navRef = useRef<HTMLDivElement>(null);

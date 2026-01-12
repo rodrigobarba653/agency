@@ -648,7 +648,7 @@ export default function HeroVideo({
           </h2>
           <p
             ref={anosRef}
-            className={`${ppNeueCorpNormalUltralight.variable} font-pp-normal-ultralight text-white text-sm md:text-base uppercase tracking-wider`}
+            className={`${ppNeueCorpNormalUltralight.variable} font-pp-normal-medium text-white text-sm md:text-base uppercase tracking-wider`}
           >
             25 AÑOS PRODUCIENDO EXPERIENCIAS
           </p>

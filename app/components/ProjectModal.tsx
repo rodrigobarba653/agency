@@ -5,6 +5,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { Project } from "../data/projects";
 import { ppNeueCorpWideMedium } from "../fonts";
+import { getFolderImages } from "../utils/projectUtils";
 
 interface ProjectModalProps {
   project: Project | null;
@@ -30,22 +31,7 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
     }
 
     // Generate image paths based on folder name
-    const imageCounts: Record<string, number> = {
-      amazon: 19,
-      natura: 9,
-      royalcanin: 16,
-      talent: 20,
-    };
-
-    const count = imageCounts[project.folder] || 0;
-    const projectImages: string[] = [];
-
-    for (let i = 1; i <= count; i++) {
-      const imageNumber = String(i).padStart(3, "0");
-      projectImages.push(
-        `/images/projects/${project.folder}/${project.folder}_${imageNumber}.jpg`
-      );
-    }
+    const projectImages = getFolderImages(project.folder);
 
     setImages(projectImages);
     setCurrentImageIndex(0);

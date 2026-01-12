@@ -17,7 +17,6 @@ export default function Projects() {
   const isHoldingRef = useRef(false);
   const isHoveringRef = useRef(false);
   const isModalOpenRef = useRef(false);
-  const animationRef = useRef<number | null>(null);
   const accelerationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollTimeRef = useRef<number>(Date.now());
   const scrollVelocityRef = useRef<number>(0);
@@ -255,7 +254,7 @@ export default function Projects() {
                   src={project.image}
                   alt={project.title}
                   fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="object-cover transition-all duration-300 group-hover:scale-105 grayscale group-hover:grayscale-0"
                   sizes="500px"
                 />
                 {/* Dark overlay */}

@@ -5,44 +5,7 @@ import Image from "next/image";
 import { gsap } from "gsap";
 import Frame from "./Frame";
 import { isElementInView } from "../utils/viewUtils";
-
-// Helper function to extract and format folder name from image path
-const getEventTitle = (folderName: string): string => {
-  // Format folder names to proper titles
-  const titleMap: Record<string, string> = {
-    amazon: "Amazon",
-    natura: "Natura",
-    royalcanin: "Royal Canin",
-    talent: "Talent",
-  };
-
-  return (
-    titleMap[folderName] ||
-    folderName.charAt(0).toUpperCase() + folderName.slice(1)
-  );
-};
-
-// Helper function to get all images for a folder
-const getFolderImages = (folderName: string): string[] => {
-  const imageCounts: Record<string, number> = {
-    amazon: 19,
-    natura: 9,
-    royalcanin: 16,
-    talent: 20,
-  };
-
-  const count = imageCounts[folderName] || 0;
-  const images: string[] = [];
-
-  for (let i = 1; i <= count; i++) {
-    const imageNumber = String(i).padStart(3, "0");
-    images.push(
-      `/images/projects/${folderName}/${folderName}_${imageNumber}.jpg`
-    );
-  }
-
-  return images;
-};
+import { getEventTitle, getFolderImages } from "../utils/projectUtils";
 
 const eventos = [
   {
